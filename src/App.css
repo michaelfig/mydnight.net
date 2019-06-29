@@ -8,6 +8,11 @@
   pointer-events: none;
 }
 
+a {
+  text-decoration: underline;
+  color: #fff;
+}
+
 .App-header {
   background-color: #282c34;
   min-height: 100vh;
