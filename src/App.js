@@ -20,18 +20,24 @@ relationship to Stewart displayed on screen to the participants.</p>
 and publishing it for the future. The live stream, recording and other contributions in
 Stewart’s memory will be available from <a href="https://mydnight.net/">mydnight.net</a>.</p>
 
-<p>The memorial will be held Sunday July 7th, at <a href="http://www.timebie.com/std/cst.php?q=13">1pm Central Standard Time</a>,
-in the <a href="https://goo.gl/maps/qSHv6ruz43baCQYr7">Oxbow, Saskatchewan area</a>.  <b>Whether you can or cannot attend, please fill out the <a href="#rsvp">RSVP form below</a></b>.
-</p>
+<p>The memorial will be held Sunday July 7th, at <a target="_blank" href="http://www.timebie.com/std/cst.php?q=13">1pm Central Standard Time</a>,
+in the <a target="_blank" href="https://goo.gl/maps/9SdmvWqRDLo85dyz5">Oxbow (Saskatchewan) Seniors' Centre</a>. A graveside committal at the
+Glen Ewen cemetery will occur following the memorial, with a brief lunch to
+follow. If you are in need of assistance seating at the gravesite, please feel
+free to bring your own chair.  Please
+visit <a href="https://mydnight.net">https://mydnight.net</a> for updated
+information and <a href="#rsvp">to fill out the RSVP form</a>.</p>
 
-<p>As per <a href="https://www.redpathfuneralhome.com/notices/Stewart-Berntson?fbclid=IwAR3WLUKxbXjvX7QA6i4QoTDGbrexUSV0_ZWnJDvi_d4nu40t9VwAF6Lqi-U">the obituary</a>,
+<p>As per <a target="_blank" href="https://www.redpathfuneralhome.com/notices/Stewart-Berntson?fbclid=IwAR3WLUKxbXjvX7QA6i4QoTDGbrexUSV0_ZWnJDvi_d4nu40t9VwAF6Lqi-U">the obituary</a>,
 donations in memory of Stewart may be given to:
-  <blockquote><a href="https://www.epilepsysaskatoon.com/">Saskatchewan Epilepsy Society</a><br/>
+  <blockquote><a target="_blank" href="https://www.epilepsysaskatoon.com/">Saskatchewan Epilepsy Society</a><br/>
   114 Maxwell Crescent<br/>
   Saskatoon, SK<br/>
   CANADA&nbsp;&nbsp;&nbsp;S7L 3Y2</blockquote></p>
 
-<a name="rsvp"><iframe title="Stewart Berntson Memorial RSVP" src="https://docs.google.com/forms/d/e/1FAIpQLSf8ue-sMmm1rhS_Njr2OqwkPqnvYO9wN50gPeSc6ntX9EvDSQ/viewform?embedded=true" width="640" height="1516" frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe></a>
+  <a name="rsvp">
+  <iframe title="Stewart Berntson Memorial RSVP" src="https://docs.google.com/forms/d/e/1FAIpQLSf8ue-sMmm1rhS_Njr2OqwkPqnvYO9wN50gPeSc6ntX9EvDSQ/viewform?embedded=true" width="640" height="1516" frameborder="0" marginheight="0" marginwidth="0">Loading...</iframe>
+  </a>
 
       </header>
     </div>
