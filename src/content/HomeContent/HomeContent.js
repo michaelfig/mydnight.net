@@ -33,7 +33,7 @@ class HomeContent extends Component {
 <p>Reflecting the thoughtful and heartfelt spirit in which Stewart shared his many stories,
   we will be holding a memorial service where participants can reflect, and choose to share
   something from the heart.  You are free to prepare something to share (thoughts, feelings,
-  a poem, some music, or other), or do something impromptu as you feel led.</p>
+  a poem, some music, or other), to do something impromptu as you feel led, or just to listen.</p>
 
 <p>You can consider whether you want to go up to the podium and be recorded or share audio only
 from a microphone at your seat.  You will also have the option of having your name and
