@@ -3,9 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@material-ui/core": "^4.0.0-rc.0",
+    "@material-ui/icons": "^4.2.1",
+    "firebase": "^6.2.4",
+    "gh-pages": "^2.0.1",
+    "mdi-material-ui": "^6.1.0",
+    "moment": "^2.24.0",
+    "numeral": "^2.0.6",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
-    "react-scripts": "3.0.1"
+    "react-router-dom": "^5.0.1",
+    "react-scripts": "3.0.1",
+    "react-swipeable-views": "^0.13.3",
+    "reading-time": "^1.2.0",
+    "typeface-roboto": "0.0.54",
+    "validate.js": "^0.13.1"
   },
   "scripts": {
     "start": "react-scripts start",
