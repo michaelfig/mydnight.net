@@ -53,7 +53,7 @@ information and <Link to="/rsvp" component={RouterLink}>to fill out the RSVP for
 
 <p>As per <Link target="_blank" rel="noreferrer" href="https://www.redpathfuneralhome.com/notices/Stewart-Berntson?fbclid=IwAR3WLUKxbXjvX7QA6i4QoTDGbrexUSV0_ZWnJDvi_d4nu40t9VwAF6Lqi-U">the obituary</Link>,
 donations in memory of Stewart may be given to:</p>
-  <blockquote><Link target="_blank" rel="noreferrer" href="https://www.epilepsysaskatoon.com/">Saskatchewan Epilepsy Society</Link><br/>
+  <blockquote>Saskatchewan Epilepsy Society<br/>
   114 Maxwell Crescent<br/>
   Saskatoon, SK<br/>
   CANADA&nbsp;&nbsp;&nbsp;S7L 3Y2</blockquote>
