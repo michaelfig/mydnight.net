@@ -1,12 +1,21 @@
 import React from 'react';
 import {withRouter} from 'react-router-dom';
 
-import { BottomNavigation, BottomNavigationAction } from '@material-ui/core';
+import BottomNavigation from '@material-ui/core/BottomNavigation';
+import BottomNavigationAction from '@material-ui/core/BottomNavigationAction';
+import { withStyles } from '@material-ui/core/styles';
 
 import HomeIcon from '@material-ui/icons/Home';
 import RSVPIcon from '@material-ui/icons/Email';
 
-function Bottom({history, location}) {
+const style = {
+  stickyBottom: {
+    position: 'sticky',
+    bottom: 0,
+  },
+};
+
+function Bottom({history, location, classes}) {
   const [value, setValue] = React.useState(0);
 
   const actualValue = location.pathname === '/rsvp' ? 1 : value;
@@ -22,6 +31,7 @@ function Bottom({history, location}) {
           }
           setValue(newValue);
         }}
+        className={classes.stickyBottom}
         showLabels
         >
         <BottomNavigationAction label="Home" icon={<HomeIcon />} />
@@ -29,5 +39,5 @@ function Bottom({history, location}) {
       </BottomNavigation>);
 }
 
-export default withRouter(Bottom);
+export default withStyles(style)(withRouter(Bottom));
 
