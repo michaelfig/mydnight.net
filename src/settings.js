@@ -40,8 +40,7 @@ const settings = {
   credentials: {
     firebase: {
       apiKey: "AIzaSyDp36Leow_QvszwMGaYqB4EuD7grh3bO_g",
-      // authDomain: "mydnight.firebaseapp.com",
-      authDomain: 'mydnight.net',
+      authDomain: "mydnight.firebaseapp.com",
       databaseURL: "https://mydnight.firebaseio.com",
       projectId: "mydnight",
       storageBucket: "mydnight.appspot.com",
