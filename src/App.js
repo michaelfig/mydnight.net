@@ -10,9 +10,7 @@ import NotFoundContent from './content/NotFoundContent/NotFoundContent';
 import PrivacyContent from './content/PrivacyContent/PrivacyContent';
 
 import ConfirmationDialog from './dialogs/ConfirmationDialog/ConfirmationDialog';
-import SignUpDialog from './dialogs/SignUpDialog/SignUpDialog';
 import SignInDialog from './dialogs/SignInDialog/SignInDialog';
-import ResetPasswordDialog from './dialogs/ResetPasswordDialog/ResetPasswordDialog';
 
 // import LaunchScreen from './layout/LaunchScreen/LaunchScreen';
 
@@ -65,16 +63,39 @@ class App extends React.Component {
       displayName: '',
       emailAddress: '',
 
-      signUpDialog: {
-        open: false
+      uiConfig: {
+        signInOptions: [
+          // Leave the lines as is for the providers you want to offer your users.
+          firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+          firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+          // firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+          // firebase.auth.GithubAuthProvider.PROVIDER_ID,
+          firebase.auth.EmailAuthProvider.PROVIDER_ID,
+          {
+            provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
+            defaultCountry: 'CA',
+          },
+          // firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID
+        ],
+        // tosUrl and privacyPolicyUrl accept either url string or a callback
+        // function.
+        // Terms of service url/callback.
+        // tosUrl: '<your-tos-url>',
+        // Privacy policy url/callback.
+        signInFlow: 'popup',
+        callbacks: {
+          // Avoid redirects after sign-in.
+          signInSuccessWithAuthResult: () => false
+        },
+        privacyPolicyUrl: function() {
+          window.location.assign('https://mydnight.net/privacy');
+        },
       },
-
+      
       signInDialog: {
-        open: false
-      },
-
-      resetPasswordDialog: {
-        open: false
+        open: false,
+        authId: 'firebaseui-auth-container',
+        onOpen: false,
       },
 
       signOutDialog: {
@@ -396,10 +417,12 @@ class App extends React.Component {
   };
 
   openSignInDialog = () => {
+    const {uiConfig} = this.state;
     this.setState({
       signInDialog: {
-        open: true
-      }
+        open: true,
+        uiConfig,
+      },
     });
   };
 
@@ -508,11 +531,8 @@ class App extends React.Component {
 
             user={user}
 
-            onSignUpClick={this.openSignUpDialog}
             onSignInClick={this.openSignInDialog}
-
-            onSettingsClick={this.openSettingsDialog}
-            onSignOutClick={this.openSignOutDialog}
+            onSignOutClick={() => firebase.auth().signOut()}
           />
           <Switch>
             <Route exact path="/" render={() => (<HomeContent/>)} />
@@ -541,67 +561,23 @@ class App extends React.Component {
           {!isSignedIn &&
                   <React.Fragment>
                     <Hidden only="xs">
-                      <SignUpDialog
-                        open={signUpDialog.open}
-
-                        isPerformingAuthAction={isPerformingAuthAction}
-
-                        signUp={this.signUp}
-
-                        onClose={this.closeSignUpDialog}
-                        onAuthProviderClick={this.signInWithProvider}
-                      />
-
                       <SignInDialog
                         open={signInDialog.open}
-
-                        isPerformingAuthAction={isPerformingAuthAction}
-
-                        signIn={this.signIn}
+                        uiConfig={signInDialog.uiConfig}
 
                         onClose={this.closeSignInDialog}
-                        onAuthProviderClick={this.signInWithProvider}
-                        onResetPasswordClick={this.openResetPasswordDialog}
                       />
                     </Hidden>
 
                     <Hidden only={['sm', 'md', 'lg', 'xl']}>
-                      <SignUpDialog
-                        fullScreen
-                        open={signUpDialog.open}
-
-                        isPerformingAuthAction={isPerformingAuthAction}
-
-                        signUp={this.signUp}
-
-                        onClose={this.closeSignUpDialog}
-                        onAuthProviderClick={this.signInWithProvider}
-                      />
-
                       <SignInDialog
                         fullScreen
                         open={signInDialog.open}
 
-                        isPerformingAuthAction={isPerformingAuthAction}
-
-                        signIn={this.signIn}
-
                         onClose={this.closeSignInDialog}
-                        onAuthProviderClick={this.signInWithProvider}
-                        onResetPasswordClick={this.openResetPasswordDialog}
                       />
                     </Hidden>
-
-                    <ResetPasswordDialog
-                      open={resetPasswordDialog.open}
-
-                      isPerformingAuthAction={isPerformingAuthAction}
-
-                      resetPassword={this.resetPassword}
-
-                      onClose={this.closeResetPasswordDialog}
-                    />
-                  </React.Fragment>
+                </React.Fragment>
                 }
 
 

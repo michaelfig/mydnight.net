@@ -83,7 +83,6 @@ class Bar extends React.Component {
 
           {!isSignedIn &&
             <React.Fragment>
-              <Button className={classes.signUpButton} color="secondary" disabled={isPerformingAuthAction} variant="contained" onClick={onSignUpClick}>Sign Up</Button>
               <Button color="secondary" disabled={isPerformingAuthAction} variant="contained" onClick={onSignInClick}>Sign In</Button>
             </React.Fragment>
           }

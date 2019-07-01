@@ -47,7 +47,7 @@ const settings = {
       messagingSenderId: "513832891425",
       appId: "1:513832891425:web:37b28f31abe17549",
     }
-  }
+  },
 };
 
 export default settings;
