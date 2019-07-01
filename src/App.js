@@ -9,6 +9,7 @@ import RSVPContent from './content/RSVPContent/RSVPContent';
 import NotFoundContent from './content/NotFoundContent/NotFoundContent';
 import PrivacyContent from './content/PrivacyContent/PrivacyContent';
 
+import ConfirmationDialog from './dialogs/ConfirmationDialog/ConfirmationDialog';
 import SignUpDialog from './dialogs/SignUpDialog/SignUpDialog';
 import SignInDialog from './dialogs/SignInDialog/SignInDialog';
 import ResetPasswordDialog from './dialogs/ResetPasswordDialog/ResetPasswordDialog';
@@ -115,9 +116,7 @@ class App extends React.Component {
       isPerformingAuthAction: true
     }, () => {
       auth.createUserWithEmailAndPassword(emailAddress, password).then((value) => {
-        this.closeSignUpDialog(() => {
-          this.openWelcomeDialog();
-        });
+        this.closeSignUpDialog();
       }).catch((reason) => {
         const code = reason.code;
         const message = reason.message;
@@ -484,7 +483,7 @@ class App extends React.Component {
       isVerifyingEmailAddress,
       isSignedIn,
       user,
-    } = this.props;
+    } = this.state;
 
     const {
       signUpDialog,
@@ -522,6 +521,22 @@ class App extends React.Component {
             <Route component={NotFoundContent} />
           </Switch>
           <Bottom/>
+
+          {isSignedIn &&
+            <ConfirmationDialog
+              open={signOutDialog.open}
+
+              title="Sign out?"
+              contentText="While signed out you are unable to manage your profile and conduct other activities that require you to be signed in."
+              okText="Sign Out"
+              disableOkButton={isPerformingAuthAction}
+              highlightOkButton
+
+              onClose={this.closeSignOutDialog}
+              onCancelClick={this.closeSignOutDialog}
+              onOkClick={this.signOut}
+            />
+          }
 
           {!isSignedIn &&
                   <React.Fragment>
