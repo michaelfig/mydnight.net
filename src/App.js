@@ -7,6 +7,7 @@ import Bottom from './layout/Bottom/Bottom';
 import HomeContent from './content/HomeContent/HomeContent';
 import RSVPContent from './content/RSVPContent/RSVPContent';
 import NotFoundContent from './content/NotFoundContent/NotFoundContent';
+import PrivacyContent from './content/PrivacyContent/PrivacyContent';
 
 import settings from './settings';
 import { createMuiTheme } from '@material-ui/core';
@@ -32,6 +33,7 @@ function App() {
       <Switch>
       <Route exact path="/" render={() => (<HomeContent/>)} />
       <Route path="/rsvp" render={() => (<RSVPContent/>)} />
+      <Route path="/privacy" render={() => (<PrivacyContent/>)} />
       <Route component={NotFoundContent} />
       </Switch>
 
