@@ -39,13 +39,14 @@ const settings = {
 
   credentials: {
     firebase: {
-      apiKey: 'AIzaSyDYZOrZVpXkPQD6J31mb9t2eIIxmGEJK-Q',
-      authDomain: 'react-material-ui-firebase.firebaseapp.com',
-      databaseURL: 'https://react-material-ui-firebase.firebaseio.com',
-      projectId: 'react-material-ui-firebase',
-      storageBucket: 'react-material-ui-firebase.appspot.com',
-      messagingSenderId: '552659850812',
-      appId: '1:552659850812:web:d685f74f72161d96'
+      apiKey: "AIzaSyDp36Leow_QvszwMGaYqB4EuD7grh3bO_g",
+      // authDomain: "mydnight.firebaseapp.com",
+      authDomain: 'mydnight.net',
+      databaseURL: "https://mydnight.firebaseio.com",
+      projectId: "mydnight",
+      storageBucket: "mydnight.appspot.com",
+      messagingSenderId: "513832891425",
+      appId: "1:513832891425:web:37b28f31abe17549",
     }
   }
 };
