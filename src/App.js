@@ -64,6 +64,7 @@ class App extends React.Component {
       emailAddress: '',
 
       uiConfig: {
+        signInSuccessUrl: 'https://mydnight.net',
         signInOptions: [
           // Leave the lines as is for the providers you want to offer your users.
           firebase.auth.GoogleAuthProvider.PROVIDER_ID,
@@ -82,11 +83,11 @@ class App extends React.Component {
         // Terms of service url/callback.
         // tosUrl: '<your-tos-url>',
         // Privacy policy url/callback.
-        signInFlow: 'popup',
-        callbacks: {
+        //signInFlow: 'popup',
+        //callbacks: {
           // Avoid redirects after sign-in.
-          signInSuccessWithAuthResult: () => false
-        },
+        //  signInSuccessWithAuthResult: () => false
+        //},
         privacyPolicyUrl: function() {
           window.location.assign('https://mydnight.net/privacy');
         },
@@ -573,6 +574,7 @@ class App extends React.Component {
                       <SignInDialog
                         fullScreen
                         open={signInDialog.open}
+                        uiConfig={signInDialog.uiConfig}
 
                         onClose={this.closeSignInDialog}
                       />
