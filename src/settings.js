@@ -45,6 +45,7 @@ const settings = {
       projectId: "mydnight",
       storageBucket: "mydnight.appspot.com",
       messagingSenderId: "513832891425",
+      vapidKey: "BPpLJ2doSYAmvAHNpnB1NKiD25HmOjixGxAGZI2-jLAKCRAFhpt4w0kVcuVcn_6pUzhm25974rSNu56MgDxxUnU",
       appId: "1:513832891425:web:37b28f31abe17549",
     }
   },
