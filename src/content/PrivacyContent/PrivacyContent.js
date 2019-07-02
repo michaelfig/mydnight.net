@@ -2,8 +2,6 @@ import React, { Component } from 'react';
 
 import { withStyles } from '@material-ui/core/styles';
 
-import EmptyState from '../../layout/EmptyState/EmptyState';
-
 const styles = (theme) => ({
   frame: {
     minHeight: '20px',

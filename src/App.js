@@ -9,7 +9,6 @@ import RSVPContent from './content/RSVPContent/RSVPContent';
 import NotFoundContent from './content/NotFoundContent/NotFoundContent';
 import PrivacyContent from './content/PrivacyContent/PrivacyContent';
 
-import ConfirmationDialog from './dialogs/ConfirmationDialog/ConfirmationDialog';
 import SignInDialog from './dialogs/SignInDialog/SignInDialog';
 
 // import LaunchScreen from './layout/LaunchScreen/LaunchScreen';
@@ -64,7 +63,7 @@ class App extends React.Component {
       emailAddress: '',
 
       uiConfig: {
-        signInSuccessUrl: 'https://mydnight.net',
+        signInSuccessUrl: '/',
         signInOptions: [
           // Leave the lines as is for the providers you want to offer your users.
           firebase.auth.GoogleAuthProvider.PROVIDER_ID,
@@ -83,11 +82,11 @@ class App extends React.Component {
         // Terms of service url/callback.
         // tosUrl: '<your-tos-url>',
         // Privacy policy url/callback.
-        //signInFlow: 'popup',
-        //callbacks: {
+        signInFlow: 'popup',
+        callbacks: {
           // Avoid redirects after sign-in.
-        //  signInSuccessWithAuthResult: () => false
-        //},
+          signInSuccessWithAuthResult: () => false,
+        },
         privacyPolicyUrl: function() {
           window.location.assign('https://mydnight.net/privacy');
         },
@@ -95,12 +94,6 @@ class App extends React.Component {
       
       signInDialog: {
         open: false,
-        authId: 'firebaseui-auth-container',
-        onOpen: false,
-      },
-
-      signOutDialog: {
-        open: false
       },
 
       snackbar: {
@@ -163,212 +156,6 @@ class App extends React.Component {
     });
   };
 
-  signIn = (emailAddress, password) => {
-    if (this.state.isSignedIn) {
-      return;
-    }
-
-    if (!emailAddress || !password) {
-      return;
-    }
-
-    const errors = validate({
-      emailAddress: emailAddress,
-      password: password,
-    }, {
-      emailAddress: constraints.emailAddress,
-      password: constraints.password
-    });
-
-    if (errors) {
-      return;
-    }
-
-    this.setState({
-      isPerformingAuthAction: true
-    }, () => {
-      auth.signInWithEmailAndPassword(emailAddress, password).then((value) => {
-        this.closeSignInDialog(() => {
-          const user = value.user;
-          const displayName = user.displayName;
-          const emailAddress = user.email;
-
-          this.openSnackbar(`Signed in as ${displayName || emailAddress}`);
-        });
-      }).catch((reason) => {
-        const code = reason.code;
-        const message = reason.message;
-
-        switch (code) {
-          case 'auth/invalid-email':
-          case 'auth/user-disabled':
-          case 'auth/user-not-found':
-          case 'auth/wrong-password':
-            this.openSnackbar(message);
-            return;
-
-          default:
-            this.openSnackbar(message);
-            return;
-        }
-      }).finally(() => {
-        this.setState({
-          isPerformingAuthAction: false
-        });
-      });
-    });
-  };
-
-  signInWithProvider = (provider) => {
-    if (this.state.isSignedIn) {
-      return;
-    }
-
-    if (!provider) {
-      return;
-    }
-
-    this.setState({
-      isPerformingAuthAction: true
-    }, () => {
-      auth.signInWithPopup(provider).then((value) => {
-        this.closeSignUpDialog(() => {
-          this.closeSignInDialog(() => {
-            const user = value.user;
-            const displayName = user.displayName;
-            const emailAddress = user.email;
-
-            this.openSnackbar(`Signed in as ${displayName || emailAddress}`);
-          });
-        });
-      }).catch((reason) => {
-        const code = reason.code;
-        const message = reason.message;
-
-        switch (code) {
-          case 'auth/account-exists-with-different-credential':
-          case 'auth/auth-domain-config-required':
-          case 'auth/cancelled-popup-request':
-          case 'auth/operation-not-allowed':
-          case 'auth/operation-not-supported-in-this-environment':
-          case 'auth/popup-blocked':
-          case 'auth/popup-closed-by-user':
-          case 'auth/unauthorized-domain':
-            this.openSnackbar(message);
-            return;
-
-          default:
-            this.openSnackbar(message);
-            return;
-        }
-      }).finally(() => {
-        this.setState({
-          isPerformingAuthAction: false
-        });
-      });
-    });
-  };
-
-  resetPassword = (emailAddress) => {
-    if (this.state.isSignedIn) {
-      return;
-    }
-
-    if (!emailAddress) {
-      return;
-    }
-
-    const errors = validate({
-      emailAddress: emailAddress
-    }, {
-      emailAddress: constraints.emailAddress
-    });
-
-    if (errors) {
-      return;
-    }
-
-    this.setState({
-      isPerformingAuthAction: true
-    }, () => {
-      auth.sendPasswordResetEmail(emailAddress).then(() => {
-        this.closeResetPasswordDialog(() => {
-          this.openSnackbar(`Password reset e-mail sent to ${emailAddress}`);
-        });
-      }).catch((reason) => {
-        const code = reason.code;
-        const message = reason.message;
-
-        switch (code) {
-          case 'auth/invalid-email':
-          case 'auth/missing-android-pkg-name':
-          case 'auth/missing-continue-uri':
-          case 'auth/missing-ios-bundle-id':
-          case 'auth/invalid-continue-uri':
-          case 'auth/unauthorized-continue-uri':
-          case 'auth/user-not-found':
-            this.openSnackbar(message);
-            return;
-
-          default:
-            this.openSnackbar(message);
-            return;
-        }
-      }).finally(() => {
-        this.setState({
-          isPerformingAuthAction: false
-        });
-      });
-    });
-  };
-
-  verifyEmailAddress = (callback) => {
-    const { user, isSignedIn } = this.state;
-
-    if (!user || !user.email || !isSignedIn) {
-      return;
-    }
-
-    this.setState({
-      isPerformingAuthAction: true
-    }, () => {
-      user.sendEmailVerification().then(() => {
-        this.setState({
-          isVerifyingEmailAddress: true
-        }, () => {
-          const emailAddress = user.email;
-
-          this.openSnackbar(`Verification e-mail sent to ${emailAddress}`);
-
-          if (callback && typeof callback === 'function') {
-            callback();
-          }
-        });
-      }).catch((reason) => {
-        const code = reason.code;
-        const message = reason.message;
-
-        switch (code) {
-          case 'auth/missing-android-pkg-name':
-          case 'auth/missing-continue-uri':
-          case 'auth/missing-ios-bundle-id':
-          case 'auth/invalid-continue-uri':
-          case 'auth/unauthorized-continue-uri':
-            this.openSnackbar(message);
-            return;
-
-          default:
-            this.openSnackbar(message);
-            return;
-        }
-      }).finally(() => {
-        this.setState({
-          isPerformingAuthAction: false
-        });
-      });
-    });
-  };
-
   signOut = () => {
     if (!this.state.isSignedIn) {
       return;
@@ -378,9 +165,7 @@ class App extends React.Component {
       isPerformingAuthAction: true
     }, () => {
       auth.signOut().then(() => {
-        this.closeSignOutDialog(() => {
-          this.openSnackbar('Signed out');
-        });
+        this.openSnackbar('Signed out');
       }).catch((reason) => {
         const code = reason.code;
         const message = reason.message;
@@ -395,25 +180,6 @@ class App extends React.Component {
           isPerformingAuthAction: false
         });
       });
-    });
-  };
-  openSignUpDialog = () => {
-    this.setState({
-      signUpDialog: {
-        open: true
-      }
-    });
-  };
-
-  closeSignUpDialog = (callback) => {
-    this.setState({
-      signUpDialog: {
-        open: false
-      }
-    }, () => {
-      if (callback && typeof callback === 'function') {
-        callback();
-      }
     });
   };
 
@@ -430,46 +196,6 @@ class App extends React.Component {
   closeSignInDialog = (callback) => {
     this.setState({
       signInDialog: {
-        open: false
-      }
-    }, () => {
-      if (callback && typeof callback === 'function') {
-        callback();
-      }
-    });
-  };
-
-  openResetPasswordDialog = () => {
-    this.setState({
-      resetPasswordDialog: {
-        open: true
-      }
-    });
-  };
-
-  closeResetPasswordDialog = (callback) => {
-    this.setState({
-      resetPasswordDialog: {
-        open: false
-      }
-    }, () => {
-      if (callback && typeof callback === 'function') {
-        callback();
-      }
-    });
-  };
-
-  openSignOutDialog = () => {
-    this.setState({
-      signOutDialog: {
-        open: true
-      }
-    });
-  };
-
-  closeSignOutDialog = (callback) => {
-    this.setState({
-      signOutDialog: {
         open: false
       }
     }, () => {
@@ -502,18 +228,13 @@ class App extends React.Component {
 
   render() {
     const {
-      isAuthReady,
       isPerformingAuthAction,
-      isVerifyingEmailAddress,
       isSignedIn,
       user,
     } = this.state;
 
     const {
-      signUpDialog,
       signInDialog,
-      resetPasswordDialog,
-      signOutDialog
     } = this.state;
 
     const { snackbar } = this.state;
@@ -533,7 +254,7 @@ class App extends React.Component {
             user={user}
 
             onSignInClick={this.openSignInDialog}
-            onSignOutClick={() => firebase.auth().signOut()}
+            onSignOutClick={this.signOut}
           />
           <Switch>
             <Route exact path="/" render={() => (<HomeContent/>)} />
@@ -542,22 +263,6 @@ class App extends React.Component {
             <Route component={NotFoundContent} />
           </Switch>
           <Bottom/>
-
-          {isSignedIn &&
-            <ConfirmationDialog
-              open={signOutDialog.open}
-
-              title="Sign out?"
-              contentText="While signed out you are unable to manage your profile and conduct other activities that require you to be signed in."
-              okText="Sign Out"
-              disableOkButton={isPerformingAuthAction}
-              highlightOkButton
-
-              onClose={this.closeSignOutDialog}
-              onCancelClick={this.closeSignOutDialog}
-              onOkClick={this.signOut}
-            />
-          }
 
           {!isSignedIn &&
                   <React.Fragment>
@@ -582,8 +287,7 @@ class App extends React.Component {
                 </React.Fragment>
                 }
 
-
-                <Snackbar
+               <Snackbar
                   autoHideDuration={snackbar.autoHideDuration}
                   message={snackbar.message}
                   open={snackbar.open}

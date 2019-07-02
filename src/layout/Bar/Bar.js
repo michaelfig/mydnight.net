@@ -54,14 +54,11 @@ class Bar extends React.Component {
   };
 
   render() {
-    // Styling
-    const { classes } = this.props;
-
     // Properties
     const { title, isPerformingAuthAction, isSignedIn, user } = this.props;
 
     // Events
-    const { onSignUpClick, onSignInClick } = this.props;
+    const { onSignInClick } = this.props;
 
     const { menu } = this.state;
 
