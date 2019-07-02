@@ -53,12 +53,15 @@ class Bar extends React.Component {
     this.props.onSignOutClick();
   };
 
+  handleSignInClick = () => {
+    const { onSignInClick } = this.props;
+    this.closeMenu();
+    onSignInClick();
+  };
+
   render() {
     // Properties
     const { title, isPerformingAuthAction, isSignedIn, user } = this.props;
-
-    // Events
-    const { onSignInClick } = this.props;
 
     const { menu } = this.state;
 
@@ -73,12 +76,9 @@ class Bar extends React.Component {
               </IconButton>
 
               <Menu anchorEl={menu.anchorEl} open={Boolean(menu.anchorEl)} onClose={this.closeMenu}>
-                {user && user.isAnonymous && 
-                  [
-                  <MenuItem key="isAnon"><i>Anonymous</i></MenuItem>,
-                  <MenuItem key="signin" disabled={isPerformingAuthAction} onClick={onSignInClick}
-                  >Sign in</MenuItem>,
-                  ]}
+                {user.isAnonymous && 
+                  <MenuItem disabled={isPerformingAuthAction} onClick={this.handleSignInClick}>Link Account</MenuItem>
+                }
                 <MenuItem disabled={isPerformingAuthAction} onClick={this.handleSignOutClick}>Sign out</MenuItem>
               </Menu>
             </React.Fragment>
@@ -86,7 +86,7 @@ class Bar extends React.Component {
 
           {!isSignedIn &&
             <React.Fragment>
-              <Button color="secondary" disabled={isPerformingAuthAction} variant="contained" onClick={onSignInClick}>Sign In</Button>
+              <Button color="secondary" disabled={isPerformingAuthAction} variant="contained" onClick={this.handleSignInClick}>Sign In</Button>
             </React.Fragment>
           }
       </Toolbar>

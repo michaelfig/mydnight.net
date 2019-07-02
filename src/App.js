@@ -66,19 +66,22 @@ class App extends React.Component {
         signInSuccessUrl: '/',
         signInOptions: [
           // Leave the lines as is for the providers you want to offer your users.
+          firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID,
           firebase.auth.GoogleAuthProvider.PROVIDER_ID,
           firebase.auth.FacebookAuthProvider.PROVIDER_ID,
           // firebase.auth.TwitterAuthProvider.PROVIDER_ID,
           // firebase.auth.GithubAuthProvider.PROVIDER_ID,
-          firebase.auth.EmailAuthProvider.PROVIDER_ID,
+          {
+            provider: firebase.auth.EmailAuthProvider.PROVIDER_ID,
+            // forceSameDevice: true,
+            // signInMethod: firebase.auth.EmailAuthProvider.EMAIL_LINK_SIGN_IN_METHOD,
+          },
           {
             provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
             defaultCountry: 'CA',
           },
-          firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID,
         ],
         autoUpgradeAnonymousUsers: true,
-        forceSameDevice: true,
         // tosUrl and privacyPolicyUrl accept either url string or a callback
         // function.
         // Terms of service url/callback.
@@ -87,7 +90,14 @@ class App extends React.Component {
         signInFlow: 'popup',
         callbacks: {
           // Avoid redirects after sign-in.
-          signInSuccessWithAuthResult: () => false,
+          // signInSuccessWithAuthResult: () => {
+          //  this.closeSignInDialog();
+          //  return false;
+          // },
+          signInFailure: e => {
+            this.closeSignInDialog();
+            this.openSnackbar(`${e.message} (${e.code})`);
+          },
         },
         privacyPolicyUrl: function() {
           window.location.assign('https://mydnight.net/privacy');
@@ -217,35 +227,31 @@ class App extends React.Component {
           </Switch>
           <Bottom/>
 
-          {!isSignedIn &&
-                  <React.Fragment>
-                    <Hidden only="xs">
-                      <SignInDialog
-                        open={signInDialog.open}
-                        uiConfig={signInDialog.uiConfig}
+          <Hidden only="xs">
+            <SignInDialog
+              open={signInDialog.open}
+              uiConfig={signInDialog.uiConfig}
 
-                        onClose={this.closeSignInDialog}
-                      />
-                    </Hidden>
+              onClose={this.closeSignInDialog}
+            />
+          </Hidden>
 
-                    <Hidden only={['sm', 'md', 'lg', 'xl']}>
-                      <SignInDialog
-                        fullScreen
-                        open={signInDialog.open}
-                        uiConfig={signInDialog.uiConfig}
+          <Hidden only={['sm', 'md', 'lg', 'xl']}>
+            <SignInDialog
+              fullScreen
+              open={signInDialog.open}
+              uiConfig={signInDialog.uiConfig}
 
-                        onClose={this.closeSignInDialog}
-                      />
-                    </Hidden>
-                </React.Fragment>
-                }
+              onClose={this.closeSignInDialog}
+            />
+          </Hidden>
 
-               <Snackbar
-                  autoHideDuration={snackbar.autoHideDuration}
-                  message={snackbar.message}
-                  open={snackbar.open}
-                  onClose={this.closeSnackbar}
-                />
+          <Snackbar
+            autoHideDuration={snackbar.autoHideDuration}
+            message={snackbar.message}
+            open={snackbar.open}
+            onClose={this.closeSnackbar}
+          />
       </div>
       </Route>
       </Switch>
@@ -260,14 +266,14 @@ class App extends React.Component {
 
     this.removeAuthObserver = firebase.auth().onAuthStateChanged((user) => {
       if (this._isMounted) {
+        if (/(^\?|&)mode=/.test(window.location.search) && !user) {
+          this.openSignInDialog();
+        }
+    
         this.setState({
           isAuthReady: true,
           isSignedIn: !!user,
           user
-        }, () => {
-          if (!this.isSignedIn) {
-            firebase.auth().signInAnonymously();
-          }
         });
       }
     });
