@@ -14,21 +14,20 @@ const db = firebase.firestore();
 
 const styles = theme => ({
   upcoming: {
-    fontSize: '8vh',
+    fontSize: '8vmin',
   },
   nowPlaying: {
     color: 'yellow',
-    fontSize: '13vh',
+    fontSize: '13vmin',
   },
   details: {
     color: 'yellow',
-    fontSize: '9vh',
+    fontSize: '9vmin',
   },
   container: {
     display: 'flex',
     minHeight: '20px',
     flexDirection: 'column',
-    justifyContent: 'space-around',
     overflowY: 'hidden',
     height: '100%',
     padding: theme.spacing(2),
@@ -79,7 +78,7 @@ class RosterContent extends React.Component {
       if (!item || (!showAll && item.finishStamp)) {
         continue;
       }
-      const ont = <span>{item.order}. <i>{item.title}</i>{item.title ? ' - ' : ''}{item.name}</span>;
+      const ont = <span>{item.order}.&nbsp;<i>{item.title}</i>{item.title ? ' - ' : ''}{item.name}</span>;
       const home = item.home ? ` (${item.home})` : '';
       if (item.startStamp) {
         toShow.push(<Card raised={true} key={item.id} className={classes.card}>
