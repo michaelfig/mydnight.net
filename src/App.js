@@ -61,7 +61,7 @@ class App extends React.Component {
 
   constructor(props) {
     super(props);
-    const { history } = props;
+    // const { history } = props;
     this.state = {
       isAuthReady: false,
       isPerformingAuthAction: false,
@@ -107,6 +107,7 @@ class App extends React.Component {
           },
           signInFailure: e => {
             if (e.code !== 'firebaseui/anonymous-upgrade-merge-conflict') {
+              this.closeSignInDialog();
               this.openSnackbar(`${e.message} (${e.code})`);
               return;
             }
@@ -131,7 +132,7 @@ class App extends React.Component {
               .then(() => this._anonymousUser.delete())
               .then(() => {
                 data = null;
-                history.replace('/');
+                this.closeSignInDialog();
               })
               .catch(e => console.log(`Cannot merge`, e));
           }
