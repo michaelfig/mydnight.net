@@ -4,7 +4,11 @@ import CssBaseline from '@material-ui/core/CssBaseline';
 import Bar from './layout/Bar/Bar';
 import Bottom from './layout/Bottom/Bottom';
 
+import './firebaseInit';
+import * as firebaseui from 'firebaseui';
+
 import HomeContent from './content/HomeContent/HomeContent';
+import RosterContent from './content/RosterContent/RosterContent';
 import RSVPContent from './content/RSVPContent/RSVPContent';
 import NotFoundContent from './content/NotFoundContent/NotFoundContent';
 import PrivacyContent from './content/PrivacyContent/PrivacyContent';
@@ -13,7 +17,6 @@ import SignInDialog from './dialogs/SignInDialog/SignInDialog';
 
 // import LaunchScreen from './layout/LaunchScreen/LaunchScreen';
 
-import constraints from './constraints.json';
 import settings from './settings';
 
 import { createMuiTheme } from '@material-ui/core';
@@ -22,14 +25,11 @@ import { MuiThemeProvider } from '@material-ui/core/styles';
 import Hidden from '@material-ui/core/Hidden';
 import Snackbar from '@material-ui/core/Snackbar';
 
-import validate from 'validate.js';
 import readingTime from 'reading-time';
 
 import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/performance';
-
-firebase.initializeApp(settings.credentials.firebase);
 
 const auth = firebase.auth();
 
@@ -75,8 +75,10 @@ class App extends React.Component {
             provider: firebase.auth.PhoneAuthProvider.PROVIDER_ID,
             defaultCountry: 'CA',
           },
-          // firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID
+          firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID,
         ],
+        autoUpgradeAnonymousUsers: true,
+        forceSameDevice: true,
         // tosUrl and privacyPolicyUrl accept either url string or a callback
         // function.
         // Terms of service url/callback.
@@ -103,58 +105,6 @@ class App extends React.Component {
       },
     }
   }
-
-  signUp =  (emailAddress, password, passwordConfirmation) => {
-    if (this.state.isSignedIn) {
-      return;
-    }
-
-    if (!emailAddress || !password || !passwordConfirmation) {
-      return;
-    }
-
-    const errors = validate({
-      emailAddress: emailAddress,
-      password: password,
-      passwordConfirmation: passwordConfirmation
-    }, {
-      emailAddress: constraints.emailAddress,
-      password: constraints.password,
-      passwordConfirmation: constraints.passwordConfirmation
-    });
-
-    if (errors) {
-      return;
-    }
-
-    this.setState({
-      isPerformingAuthAction: true
-    }, () => {
-      auth.createUserWithEmailAndPassword(emailAddress, password).then((value) => {
-        this.closeSignUpDialog();
-      }).catch((reason) => {
-        const code = reason.code;
-        const message = reason.message;
-
-        switch (code) {
-          case 'auth/email-already-in-use':
-          case 'auth/invalid-email':
-          case 'auth/operation-not-allowed':
-          case 'auth/weak-password':
-            this.openSnackbar(message);
-            return;
-
-          default:
-            this.openSnackbar(message);
-            return;
-        }
-      }).finally(() => {
-        this.setState({
-          isPerformingAuthAction: false
-        });
-      });
-    });
-  };
 
   signOut = () => {
     if (!this.state.isSignedIn) {
@@ -244,6 +194,9 @@ class App extends React.Component {
     <Router>
       <MuiThemeProvider theme={theme}>
       <CssBaseline />
+      <Switch>
+        <Route path="/roster" component={RosterContent}/>
+        <Route>
       <div style={{display: 'flex', flexDirection: 'column', height: '100vh'}}>
           <Bar
             title={settings.title}
@@ -294,6 +247,8 @@ class App extends React.Component {
                   onClose={this.closeSnackbar}
                 />
       </div>
+      </Route>
+      </Switch>
       </MuiThemeProvider>
     </Router>
     </React.Fragment>
@@ -309,6 +264,10 @@ class App extends React.Component {
           isAuthReady: true,
           isSignedIn: !!user,
           user
+        }, () => {
+          if (!this.isSignedIn) {
+            firebase.auth().signInAnonymously();
+          }
         });
       }
     });

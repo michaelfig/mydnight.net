@@ -73,6 +73,12 @@ class Bar extends React.Component {
               </IconButton>
 
               <Menu anchorEl={menu.anchorEl} open={Boolean(menu.anchorEl)} onClose={this.closeMenu}>
+                {user && user.isAnonymous && 
+                  [
+                  <MenuItem key="isAnon"><i>Anonymous</i></MenuItem>,
+                  <MenuItem key="signin" disabled={isPerformingAuthAction} onClick={onSignInClick}
+                  >Sign in</MenuItem>,
+                  ]}
                 <MenuItem disabled={isPerformingAuthAction} onClick={this.handleSignOutClick}>Sign out</MenuItem>
               </Menu>
             </React.Fragment>
