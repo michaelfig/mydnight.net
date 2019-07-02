@@ -241,7 +241,11 @@ class App extends React.Component {
       <MuiThemeProvider theme={theme}>
       <CssBaseline />
       <Switch>
-        <Route path="/roster" component={RosterContent}/>
+        <Route path="/roster">
+          <div style={{height: '100vh'}}>
+            <RosterContent/>
+          </div>
+        </Route>
         <Route>
       <div style={{display: 'flex', flexDirection: 'column', height: '100vh'}}>
           <Bar

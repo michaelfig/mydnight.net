@@ -1,9 +1,44 @@
 import React from 'react';
 
+import Card from '@material-ui/core/Card';
+import CardHeader from '@material-ui/core/CardHeader';
+import CardContent from '@material-ui/core/CardContent';
+// import Typography from '@material-ui/core/Typography';
+import { withStyles } from '@material-ui/core/styles';
+
 import firebase from 'firebase/app';
 import 'firebase/firestore';
+import { Typography } from '@material-ui/core';
 
 const db = firebase.firestore();
+
+const styles = theme => ({
+  upcoming: {
+    fontSize: '8vh',
+  },
+  nowPlaying: {
+    color: 'yellow',
+    fontSize: '13vh',
+  },
+  details: {
+    color: 'yellow',
+    fontSize: '9vh',
+  },
+  container: {
+    display: 'flex',
+    minHeight: '20px',
+    flexDirection: 'column',
+    justifyContent: 'space-around',
+    overflowY: 'hidden',
+    height: '100%',
+    padding: theme.spacing(2),
+  },
+
+  card: {
+    flexShrink: 0,
+    margin: theme.spacing(1),
+  }
+});
 
 class RosterContent extends React.Component {
   constructor(props) {
@@ -14,7 +49,7 @@ class RosterContent extends React.Component {
   }
 
   componentDidMount() {
-    this.unsubscribe = db.collection('locked')
+    this.unsubscribe = db.collection('roster')
       .orderBy('order')
       .onSnapshot(querySnapshot => {
         const roster = [];
@@ -23,7 +58,7 @@ class RosterContent extends React.Component {
             ...doc.data(),
             id: doc.id,
           };
-          roster.push(item);
+          roster[item.order] = item;
         });
         this.setState({roster});
       });
@@ -36,18 +71,30 @@ class RosterContent extends React.Component {
   }
   
   render() {
-    const roster = this.state.roster.map((item, i) => (
-      i === 0 ? <div key={item.id}>{item.participant} - <i>{item.title}</i><br/>
-        {item.relationship} ({item.home})</div> :
-      <div key={item.id}>{item.participant} ({item.home})</div>
-    ));
-    return (
-      <div>
-        Would show roster.
-        {roster}
-      </div>
-    )
+    const { roster } = this.state;
+    const { classes } = this.props;
+    const toShow = [];
+    const showAll = /(^\?|&)all($|=|&)/.test(window.location.search);
+    for (const item of roster) {
+      if (!item || (!showAll && item.finishStamp)) {
+        continue;
+      }
+      const ont = <span>{item.order}. <i>{item.title}</i>{item.title ? ' - ' : ''}{item.name}</span>;
+      const home = item.home ? ` (${item.home})` : '';
+      if (item.startStamp) {
+        toShow.push(<Card raised={true} key={item.id} className={classes.card}>
+          <CardHeader title={ont} classes={{title: classes.nowPlaying}}/>
+          <CardContent className={classes.details}>{item.relationship}{home}</CardContent>
+          </Card>);
+      } else {
+        const Title = <React.Fragment>{ont}{home}</React.Fragment>;
+        toShow.push(<Card raised={true} key={item.id} className={classes.card}>
+          <CardHeader title={Title} classes={{title: classes.upcoming}}/>
+          </Card>);
+      }
+    }
+    return <div className={classes.container}>{toShow}</div>;
   }
 }
 
-export default RosterContent;
+export default withStyles(styles)(RosterContent);
