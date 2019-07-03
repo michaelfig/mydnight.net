@@ -81,7 +81,6 @@ class RosterContent extends React.Component {
       if (!item || (!showAll && item.finishStamp)) {
         continue;
       }
-      const ont = <span>{item.order}.&nbsp;{item.name}</span>;
       const home = item.home ? ` (${item.home})` : '';
       if (item.startStamp) {
         const Title = <React.Fragment>{item.order}.&nbsp;<i>{item.title}</i></React.Fragment>;

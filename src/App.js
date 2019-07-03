@@ -7,6 +7,7 @@ import Bottom from './layout/Bottom/Bottom';
 import './firebaseInit';
 // import * as firebaseui from 'firebaseui';
 
+import ArrangerContent from './content/ArrangerContent/ArrangerContent';
 import HomeContent from './content/HomeContent/HomeContent';
 import RosterContent from './content/RosterContent/RosterContent';
 import RSVPContent from './content/RSVPContent/RSVPContent';
@@ -33,7 +34,6 @@ import 'firebase/firestore';
 import 'firebase/performance';
 import 'firebase/messaging';
 
-const auth = firebase.auth();
 let messaging;
 try {
   messaging = firebase.messaging();
@@ -45,7 +45,7 @@ const db = firebase.firestore();
 // eslint-disable-next-line no-unused-vars
 const performance = firebase.performance();
 
-auth.useDeviceLanguage();
+firebase.auth().useDeviceLanguage();
 
 const theme = createMuiTheme({
     palette: {
@@ -67,6 +67,7 @@ class App extends React.Component {
       isPerformingAuthAction: false,
       isVerifyingEmailAddress: false,
       isSignedIn: false,
+      isArranger: false,
 
       user: null,
       avatar: '',
@@ -154,6 +155,11 @@ class App extends React.Component {
     }
   }
 
+  updateArranger(isArranger) {
+    console.log('updateArranger', isArranger);
+    this.setState({isArranger});
+  }
+
   signOut = () => {
     if (!this.state.isSignedIn) {
       return;
@@ -162,7 +168,7 @@ class App extends React.Component {
     this.setState({
       isPerformingAuthAction: true
     }, () => {
-      auth.signOut().then(() => {
+      firebase.auth().signOut().then(() => {
         this.openSnackbar('Signed out');
       }).catch((reason) => {
         const code = reason.code;
@@ -226,6 +232,7 @@ class App extends React.Component {
 
   render() {
     const {
+      isArranger,
       isPerformingAuthAction,
       isSignedIn,
       user,
@@ -261,11 +268,12 @@ class App extends React.Component {
           />
           <Switch>
             <Route exact path="/" render={() => (<HomeContent/>)} />
+            <Route path="/arrange" render={() => (<ArrangerContent/>)} />
             <Route path="/rsvp" render={() => (<RSVPContent/>)} />
             <Route path="/privacy" render={() => (<PrivacyContent/>)} />
             <Route component={NotFoundContent} />
           </Switch>
-          <Bottom/>
+          <Bottom isArranger={isArranger} />
 
           <Hidden only="xs">
             <SignInDialog
@@ -302,7 +310,21 @@ class App extends React.Component {
   componentDidMount() {
     this._isMounted = true;
 
-    this.removeAuthObserver = firebase.auth().onAuthStateChanged((user) => {
+    const auth = firebase.auth();
+    this.removeArrangersObserver = db.collection('arrangers')
+      .onSnapshot(querySnapshot => {
+        if (!this._isMounted) {
+          return;
+        }
+        const user = auth.currentUser;
+        let exists = false;
+        if (user) {
+          querySnapshot.forEach(result => (result.id === user.uid && (exists = true)));
+        }
+        this.setState({isArranger: exists});
+      });
+
+    this.removeAuthObserver = auth.onAuthStateChanged((user) => {
       if (user && user.isAnonymous) {
         this._anonymousUser = user;
       }
@@ -317,8 +339,16 @@ class App extends React.Component {
           isSignedIn: !!user,
           user
         }, () => {
+          if (user) {
+            db.collection('arrangers').doc(user.uid).get().then(
+              () => this.setState({isArranger: true}),
+              () => this.setState({isArranger: false}),
+            );
+          } else {
+            this.setState({isArranger: false});
+          }
           if (!continuing && !this.state.isSignedIn) {
-            firebase.auth().signInAnonymously();
+            auth.signInAnonymously();
           } else if (messaging && 'serviceWorker' in navigator) {
             messaging.requestPermission()
               .then(() => messaging.getToken())
@@ -352,6 +382,7 @@ class App extends React.Component {
     this._isMounted = false;
 
     this.removeAuthObserver();
+    this.removeArrangersObserver();
   }
 }
 
