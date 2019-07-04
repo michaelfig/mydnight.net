@@ -3,8 +3,9 @@ import React from 'react';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
-// import Typography from '@material-ui/core/Typography';
+import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
+import EmptyState from '../../layout/EmptyState/EmptyState';
 
 import firebase from 'firebase/app';
 import 'firebase/firestore';
@@ -36,17 +37,44 @@ const styles = theme => ({
     padding: theme.spacing(1),
   },
 
+  center: {
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100vh',
+    justifyContent: 'space-around',
+    textAlign: 'center',
+  },
+
+  spread: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+
   card: {
     flexShrink: 0,
     margin: theme.spacing(1),
-  }
+  },
+
+  time: {
+    position: 'absolute',
+    top: 'calc(100% - 14vmin)',
+    fontSize: '9vmin',
+    left: 'calc(100% - 42vmin)',
+    color: 'yellow',
+    margin: 0,
+  },
 });
+
+const timeConv = (d) => d.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'});
 
 class RosterContent extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      now: new Date(),
       roster: [],
+      MAX_ENTRIES: 3,
     };
   }
 
@@ -60,43 +88,76 @@ class RosterContent extends React.Component {
             ...doc.data(),
             id: doc.id,
           };
-          roster[item.order] = item;
+          roster.push(item);
         });
         this.setState({roster});
       });
+    this.ticker = setInterval(() => this.setState({now: new Date()}), 900);
   }
 
   componentWillUnmount() {
     if (this.unsubscribe) {
       this.unsubscribe();
     }
+    clearInterval(this.ticker);
   }
   
   render() {
-    const { roster } = this.state;
+    const { roster, MAX_ENTRIES } = this.state;
     const { classes } = this.props;
-    const toShow = [];
     const showAll = /(^\?|&)all($|=|&)/.test(window.location.search);
-    for (const item of roster) {
-      if (!item || (!showAll && item.finishStamp)) {
-        continue;
+
+    let i = 0;
+    let rosterIndex;
+    while (i < roster.length) {
+      if (!roster[i].finishStamp) {
+        if (roster[i].startStamp) {
+          // First playing.
+          rosterIndex = i;
+          break;
+        }
+        // Next not finished.
+        rosterIndex = i;
+      }
+      i ++;
+    }
+
+    let ended = false;
+    i = roster.length - 1;
+    if (rosterIndex === undefined && roster[i] && roster[i].finishStamp) {
+      rosterIndex = i;
+      ended = true;
+    }
+
+    const toShow = roster.slice(rosterIndex).map((item, i) => {
+      if (!showAll && i >= MAX_ENTRIES) {
+        return undefined;
       }
       const home = item.home ? ` (${item.home})` : '';
-      if (item.startStamp) {
+      if (item.startStamp && !item.finishStamp) {
         const Title = <React.Fragment>{item.order}.&nbsp;<i>{item.title}</i></React.Fragment>;
-        toShow.push(<Card raised={true} key={item.id} className={classes.card}>
-          <CardHeader title={Title} subheader={item.name}
+        const d = new Date();
+        d.setTime(item.startStamp.seconds * 1000);
+        const start = '' && timeConv(d);
+        const Subh = <div className={classes.spread}><div>{item.name}</div> <div>{start}</div></div>;
+        return (<Card raised={true} key={item.id} className={classes.card}>
+          <CardHeader title={Title} subheader={Subh}
             classes={{title: classes.nowPlaying, subheader: classes.subheader}}/>
           <CardContent className={classes.details}>{item.relationship}{home}</CardContent>
           </Card>);
       } else {
-        const Title = <React.Fragment>{item.order}.&nbsp;{item.name}</React.Fragment>;
-        toShow.push(<Card raised={true} key={item.id} className={classes.card}>
+        const Title = <React.Fragment>{item.order}.&nbsp;{item.name}{home}</React.Fragment>;
+        return (<Card raised={true} key={item.id} className={classes.card}>
           <CardHeader title={Title} classes={{title: classes.upcoming}}/>
           </Card>);
       }
-    }
-    return <div className={classes.container}>{toShow}</div>;
+    });
+
+    // this.state.now.setHours(12);
+    const now = '' && <Typography className={classes.time}>{timeConv(this.state.now)}</Typography>;
+    const Roster = ended ? <div className={classes.center}><Typography className={classes.upcoming}>The memorial has ended.</Typography></div> :
+      <div className={classes.container}>{toShow}</div>;
+    return <React.Fragment>{Roster}{now}</React.Fragment>;
   }
 }
 

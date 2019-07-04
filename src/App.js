@@ -249,9 +249,7 @@ class App extends React.Component {
       <CssBaseline />
       <Switch>
         <Route path="/roster">
-          <div style={{height: '100vh'}}>
-            <RosterContent/>
-          </div>
+          <RosterContent/>
         </Route>
         <Route>
       <div style={{display: 'flex', flexDirection: 'column', height: '100vh'}}>

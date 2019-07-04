@@ -4,16 +4,20 @@ import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardActions from '@material-ui/core/CardActions';
 import { withStyles } from '@material-ui/core/styles';
-import EmptyState from '../../layout/EmptyState/EmptyState';
+// import EmptyState from '../../layout/EmptyState/EmptyState';
 
 import firebase from 'firebase/app';
 import 'firebase/firestore';
 import IconButton from '@material-ui/core/IconButton';
-import ScheduleIcon from '@material-ui/icons/Schedule';
-import ReplayIcon from '@material-ui/icons/Redo';
-import CancelIcon from '@material-ui/icons/Cancel';
-import FinishIcon from '@material-ui/icons/AlarmOff';
-import StartIcon from '@material-ui/icons/AlarmOn';
+import PostponeIcon from '@material-ui/icons/Redo';
+
+import SkipPreviousIcon from '@material-ui/icons/SkipPrevious';
+import PlayArrowIcon from '@material-ui/icons/PlayArrow';
+import SkipNextIcon from '@material-ui/icons/SkipNext';
+
+import FormGroup from '@material-ui/core/FormGroup';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Switch from '@material-ui/core/Switch';
 
 const styles = (theme) => ({
   container: {
@@ -22,7 +26,12 @@ const styles = (theme) => ({
     flexDirection: 'column',
     overflowY: 'auto',
     height: '100%',
-    padding: theme.spacing(1),
+  },
+
+  controls: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
 
   card: {
@@ -36,6 +45,11 @@ const styles = (theme) => ({
 
   pending: {
     color: 'yellow',
+  },
+
+  playIcon: {
+    height: 38,
+    width: 38,
   },
 
   roster: {},
@@ -57,8 +71,10 @@ class ArrangerContent extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      replenish: true,
       poolOrder: [],
       roster: [],
+      rosterIndex: 0,
       all: {},
       participants: {},
     };
@@ -89,10 +105,31 @@ class ArrangerContent extends React.Component {
           const item = {
             ...doc.data(),
             id: doc.id,
+            index: roster.length,
           };
-          roster[item.order] = item;
+          roster.push(item);
         });
-        this.setState({roster});
+
+        let i = 0;
+        let rosterIndex;
+        while (i < roster.length) {
+          if (!roster[i].finishStamp) {
+            if (roster[i].startStamp) {
+              // First playing.
+              rosterIndex = i;
+              break;
+            }
+            // Next not finished.
+            rosterIndex = i;
+          }
+          i ++;
+        }
+    
+        if (rosterIndex === undefined) {
+          rosterIndex = roster.length;
+        }
+    
+        this.setState({roster, rosterIndex});
       });
     this.unsubscribeOrder = firebase.firestore().collection('order')
       .onSnapshot(querySnapshot => {
@@ -100,14 +137,17 @@ class ArrangerContent extends React.Component {
         querySnapshot.forEach(ss => {
           const data = ss.data();
           if (data.pool !== undefined) {
-            pool[ss.id] = data.pool;
+            pool[ss.id] = data;
           }
         });
-        const asc = ([aid, aorder], [bid, border]) =>
-          aorder < border ? -1 :
-          (aorder === border ?
-            (aid < bid ? -1 :
-              (aid === bid ? 0 : 1))
+        const asc = ([aid, a], [bid, b]) =>
+          a.priority < b.priority ? -1 :
+          (a.priority === b.priority ?
+            (a.order < b.order ? -1 :
+              (a.order === b.order ?
+                (aid < bid ? -1 :
+                  (aid === bid ? 0 : 1))
+                : 1))
             : 1);
         const poolOrder = Object.entries(pool).sort(asc);
         this.setState({poolOrder});
@@ -128,12 +168,64 @@ class ArrangerContent extends React.Component {
       this.unsubscribePool();
     }
   }
-  
+
+  handleReplenish = event => {
+    this.setState({replenish: event.target.checked});
+  };
+
+  reset = item => {
+    firebase.firestore().collection('roster').doc(item.id).update({
+      startStamp: null,
+      finishStamp: null,
+    });
+  };
+
+  goto = async (to) => {
+    const { roster, rosterIndex } = this.state;
+    const from = roster[rosterIndex];
+    const db = firebase.firestore();
+    try {
+      if (to && from && to.id === from.id) {
+        return;
+      }
+
+      const batch = db.batch();
+      if (to && to.addToRoster) {
+        const toSet = {...to};
+        const ss = await firebase.firestore().collection('participants').doc(to.id).get();
+        const data = ss.data();
+        for (const key of ['home', 'name', 'relationship']) {
+          if (data[key]) {
+            toSet[key] = data[key];
+          }
+        }
+        batch.set(db.collection('roster').doc(toSet.id), toSet);
+        to = toSet;
+      }
+
+      if (to) {
+        batch.update(db.collection('roster').doc(to.id), {
+          // startStamp: to.startStamp || firebase.firestore.Timestamp.now(),
+          startStamp: firebase.firestore.Timestamp.now(),
+          finishStamp: null,
+        });
+      }
+      if (from) {
+        batch.update(db.collection('roster').doc(from.id), {
+          finishStamp: firebase.firestore.Timestamp.now(),
+        });
+      }
+      await batch.commit();
+    } catch (e) {
+      console.log(`Error goto from`, from, 'to', to, e);
+    }
+  };
+
   render() {
     // Styling
     const {classes} = this.props;
 
-    const {roster, poolOrder, all, participants} = this.state;
+    const {replenish, roster, poolOrder, all, participants, rosterIndex} = this.state;
 
     const pool = [];
     const inPool = {...all};
@@ -141,65 +233,33 @@ class ArrangerContent extends React.Component {
       delete inPool[item.id];
     });
 
-    let rosterIndex = 0;
-    while (rosterIndex < roster.length && roster[rosterIndex] && roster[rosterIndex].finishStamp) {
-      rosterIndex ++;
-    }
-
-    let middleIndex;
     poolOrder.forEach(([id, order]) => {
       const item = inPool[id];
       const participant = item && participants[item.participant];
       if (participant) {
-        if (middleIndex === undefined && item.preference !== 'first') {
-          middleIndex = pool.length;
-        }
         pool.push({...participant, ...item, id, order});
         delete(inPool[id]);
       }
     });
 
-    middleIndex = middleIndex || 0;
-
-    const getOrder = (index) => poolOrder[index] ? poolOrder[index][1] : 0;
-    const middleOrder = getOrder(middleIndex);
-    const firstOrder = getOrder(0);
-    const lastOrder = getOrder(poolOrder.length - 1);
-
-    for (const id of Object.keys(inPool)) {
-      const item = inPool[id];
-      const participant = (item && participants[item.participant]) || {};
-      if (item.preference === 'first') {
-        pool.unshift({...participant, ...item, order: firstOrder, id});
-      } else if (item.preference === 'last') {
-        pool.push({...participant, ...item, order: middleOrder, id});
-      } else {
-        pool.splice(middleIndex, 0, {...participant, ...item, order: lastOrder, id});
-      }
-    }
-    
     const makeCard = pool => item => {
       const order = pool ? '' : <React.Fragment>{item.order}.&nbsp;</React.Fragment>
       const Title = <React.Fragment>{order}{item.name} - <i>{item.title}</i></React.Fragment>;
       const home = item.home ? ` (${item.home})` : '';
       const SubH = <React.Fragment>{item.relationship}{home}</React.Fragment>;
       const running = !pool && item.startStamp && !item.finishStamp;
-      const color = running ? classes.pending : pool ? classes.pool : item.finishStamp ? classes.finished : classes.roster;
-      return <Card key={item.id} className={classes.card}>
+      const color = running ? classes.pending : pool ? classes.pool : item.index < rosterIndex ? classes.finished : classes.roster;
+      return <Card key={item.id} className={classes.card}
+        onDoubleClickCapture={() => this.goto(pool ? item : roster[item.index])}>
         <div style={{display: 'flex', direction: 'row'}}>
         <CardHeader title={Title} subheader={SubH} classes={{title: color, subheader: color}} 
           className={classes.header} />
         <CardActions className={classes.actions}>
-          {!pool && !item.startStamp &&
-            <IconButton title="Start" size="small"><StartIcon /></IconButton>}
-          {!pool && item.finishStamp &&
-            <IconButton title="Replay" size="small"><ReplayIcon /></IconButton>}
-          {!pool && !item.startStamp &&
-            <IconButton title="Cancel" size="small"><CancelIcon /></IconButton>}
-          {running &&
-            <IconButton title="Finish" size="small"><FinishIcon /></IconButton>}
-          {pool &&
-            <IconButton title="Schedule" size="small"><ScheduleIcon /></IconButton>}
+          <IconButton title="Postpone"><PostponeIcon /></IconButton>
+          <IconButton aria-label="Play"
+            onClick={() => this.goto(pool ? item : roster[item.index])}
+          ><PlayArrowIcon />
+          </IconButton>
         </CardActions>
         </div>
       </Card>;
@@ -207,13 +267,42 @@ class ArrangerContent extends React.Component {
     
     const poolItems = pool.map(makeCard(true));
     const comingItems = roster.slice(Math.max(rosterIndex - 1, 0)).map(makeCard())
+    console.log(roster, pool);
     return <React.Fragment>
-      <EmptyState className={classes.container}>
-        {comingItems}
-      </EmptyState>
-      <EmptyState className={classes.container}>
-        {poolItems}
-      </EmptyState>
+      <FormGroup className={classes.controls}>
+        <IconButton aria-label="Previous"
+          disabled={!roster[rosterIndex - 1]}
+          onClick={() => this.goto(roster[rosterIndex - 1])}
+        >
+          <SkipPreviousIcon />
+        </IconButton>
+        <IconButton aria-label="Next"
+          disabled={!roster[rosterIndex]}
+          onClick={() => {
+            let next = roster[rosterIndex + 1];
+            if (!next) {
+              if (replenish && pool[0]) {
+                next = {...pool[0], addToRoster: true};
+              }
+            }
+            this.goto(next);
+          }}
+        >
+          <SkipNextIcon />
+        </IconButton>
+        <FormControlLabel
+          control={
+            <Switch checked={replenish} onChange={this.handleReplenish} value={true} />
+          }
+          label="Take from pool"
+          disabled={!pool[0]}
+          labelPlacement="bottom"
+        />
+      </FormGroup>
+      <div className={classes.container}>
+      {comingItems}
+      {poolItems}
+      </div>
       </React.Fragment>;
   }
 }

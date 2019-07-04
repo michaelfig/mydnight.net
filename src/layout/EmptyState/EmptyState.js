@@ -8,7 +8,7 @@ import Typography from '@material-ui/core/Typography';
 
 const styles = {
   center: {
-    margin: '10px',
+    padding: '10px',
     minHeight: '20px',
     flexGrow: 1,
     flexShrink: 1,
