@@ -5,26 +5,38 @@ firebase.initializeApp({
   messagingSenderId: "513832891425"
 });
 const messaging = firebase.messaging();
-messaging.setBackgroundMessageHandler(function(payload) {
-  const promiseChain = clients
-    .matchAll({
-      type: "window",
-      includeUncontrolled: true
-    })
-    .then(windowClients => {
-      for (let i = 0; i < windowClients.length; i++) {
-        const windowClient = windowClients[i];
-        windowClient.postMessage(payload);
-      }
-    })
-    .then(() =>
-      registration.showNotification(payload.data.message, {
-        vibrate: [300, 100, 400],
-      }));
-  return promiseChain;
+self.addEventListener('notificationclick', e => {
+  let found = false;
+  const click_action = e.notification.data && e.notification.data.click_action;
+  if (!click_action) {
+    return;
+  }
+  let f = clients.matchAll({
+      type: 'window'
+  })
+      .then(function (clientList) {
+          for (let i = 0; i < clientList.length; i ++) {
+              if (click_action === '/' || clientList[i].url.endsWith(click_action)) {
+                  // We already have a window to use, focus it.
+                  found = true;
+                  clientList[i].focus();
+                  break;
+              }
+          }
+          if (! found) {
+              clients.openWindow(click_action).then(function (windowClient) {});
+          }
+      });
+  e.notification.close();
+  e.waitUntil(f);
 });
 
-self.addEventListener('notificationclick', function(event) {
-  // do what you want
-  // ...
+messaging.setBackgroundMessageHandler(function (payload) {
+  console.log('[firebase-messaging-sw.js] Received background message ', payload);
+  // Customize notification here
+
+  return self.registration.showNotification(payload.data.title,
+      Object.assign({data: payload.data}, payload.data));
+
 });
+

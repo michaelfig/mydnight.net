@@ -365,10 +365,18 @@ class App extends React.Component {
                       msg => {
                         // Pop up the message and the snackbar.
                         const data = msg.data['firebase-messaging-msg-data'].data;
-                        registration.showNotification(data.message, {
-                          vibrate: [300, 100, 400],
+                        console.log('showing', data);
+                        registration.showNotification(data.title, {
+                          data,
+                          ...data,
                         });
-                        this.openSnackbar(data.message)
+                        let snack = '';
+                        snack += (data.title || '');
+                        if (snack) {
+                          snack += ' - ';
+                        }
+                        snack += (data.body || '');
+                        this.openSnackbar(snack);
                       }));
               })
               .catch(e => console.log('Cannot register for messages', e));
