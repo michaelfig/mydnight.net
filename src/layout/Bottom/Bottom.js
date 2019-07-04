@@ -19,7 +19,21 @@ const style = {
 function Bottom({history, location, classes, isArranger}) {
   const [value, setValue] = React.useState(0);
 
-  const actualValue = location.pathname === '/rsvp' ? 1 : value;
+  let actualValue;
+  switch (location.pathname) {
+    case '/':
+      actualValue = 0;
+      break;
+    case '/rsvp':
+      actualValue = 1;
+      break;
+    case '/arrange':
+      actualValue = 2;
+      break;
+    default:
+      actualValue = value;
+      break;
+  }
   return (<BottomNavigation
         value={actualValue}
         onChange={(event, newValue) => {
