@@ -161,11 +161,6 @@ class App extends React.Component {
     }
   }
 
-  updateArranger(isArranger) {
-    // console.log('updateArranger', isArranger);
-    this.setState({isArranger});
-  }
-
   signOut = () => {
     if (!this.state.isSignedIn) {
       return;
@@ -312,12 +307,12 @@ class App extends React.Component {
           <Bottom isArranger={isArranger} />
 
           <Hidden xsDown>
-            <SignInDialog
+            {signInDialog.open && <SignInDialog
               open={signInDialog.open}
               uiConfig={signInDialog.uiConfig}
 
               onClose={this.closeSignInDialog}
-            />
+            />}
 
             {settingsDialog.open && <SettingsDialog
               open={settingsDialog.open}
@@ -327,13 +322,13 @@ class App extends React.Component {
           </Hidden>
 
           <Hidden smUp>
-            <SignInDialog
+            {signInDialog.open && <SignInDialog
               fullScreen
               open={signInDialog.open}
               uiConfig={signInDialog.uiConfig}
 
               onClose={this.closeSignInDialog}
-            />
+            />}
 
             {settingsDialog.open && <SettingsDialog
               fullScreen
@@ -368,7 +363,11 @@ class App extends React.Component {
         const user = auth.currentUser;
         let exists = false;
         if (user) {
-          querySnapshot.forEach(result => (result.id === user.uid && (exists = true)));
+          querySnapshot.forEach(result => {
+            if (result.id === user.uid) {
+              exists = true;
+            }
+          });
         }
         this.setState({isArranger: exists});
       });
@@ -404,8 +403,7 @@ class App extends React.Component {
             });
 
             db.collection('arrangers').doc(user.uid).get().then(
-              () => this.setState({isArranger: true}),
-              () => this.setState({isArranger: false}),
+              ss => this.setState({isArranger: ss.exists}),
             );
           } else {
             this.setState({isArranger: false});
