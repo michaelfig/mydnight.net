@@ -84,7 +84,7 @@ class Bar extends React.Component {
               <Menu anchorEl={menu.anchorEl} open={Boolean(menu.anchorEl)} onClose={this.closeMenu}>
                 <MenuItem disabled={isPerformingAuthAction} onClick={this.handleSettingsClick}>Profile...</MenuItem>
                 {user.isAnonymous && 
-                  <MenuItem disabled={isPerformingAuthAction} onClick={this.handleSignInClick}>Link Account...</MenuItem>
+                  <MenuItem disabled={isPerformingAuthAction} onClick={this.handleSignInClick}>Sign in...</MenuItem>
                 }
                 <MenuItem disabled={isPerformingAuthAction} onClick={this.handleSignOutClick}>Sign out</MenuItem>
               </Menu>

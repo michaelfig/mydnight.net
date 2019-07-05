@@ -1,7 +1,26 @@
 import React from 'react';
-import App from './App';
 import { BrowserRouter as Router } from 'react-router-dom';
 
-export default function AppRouter() {
-  return <Router><App/></Router>;
-};
+import LaunchScreen from './layout/LaunchScreen/LaunchScreen';
+
+export default class AppRouter extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      App: undefined,
+    }
+  }
+  
+  componentWillMount() {
+    import('./App').then(module =>
+      this.setState({App: module.default}));
+  }
+
+  render() {
+    const {App} = this.state;
+    if (!App) {
+      return <div style={{display: 'flex', flexDirection: 'column', height: '100vh'}}><LaunchScreen/></div>;
+    }
+    return <Router><App/></Router>
+  }
+}
