@@ -5,7 +5,7 @@ import CardHeader from '@material-ui/core/CardHeader';
 import CardContent from '@material-ui/core/CardContent';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
-import EmptyState from '../../layout/EmptyState/EmptyState';
+// import EmptyState from '../../layout/EmptyState/EmptyState';
 
 import firebase from 'firebase/app';
 import 'firebase/firestore';

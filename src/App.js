@@ -309,7 +309,7 @@ class App extends React.Component {
           </Switch>
           <Bottom isArranger={isArranger} />
 
-          <Hidden only="xs">
+          <Hidden xsDown>
             <SignInDialog
               open={signInDialog.open}
               uiConfig={signInDialog.uiConfig}
@@ -324,7 +324,7 @@ class App extends React.Component {
             />}
           </Hidden>
 
-          <Hidden only={['sm', 'md', 'lg', 'xl']}>
+          <Hidden smUp>
             <SignInDialog
               fullScreen
               open={signInDialog.open}

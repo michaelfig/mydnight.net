@@ -13,10 +13,9 @@ import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel'
 
 const styles = (theme) => ({
-  authContent: {
-    height: '600px',
-    width: '400px',
-  }
+  dialog: {
+    width: "500px",
+  },
 });
 
 class SettingsDialog extends Component {
@@ -58,6 +57,8 @@ class SettingsDialog extends Component {
     const { onClose } = this.props;
     const onOkClick = this.onOkClick;
 
+    const { classes } = this.props;
+
     const disableOkButton = false;
     const highlightOkButton = true;
 
@@ -66,12 +67,13 @@ class SettingsDialog extends Component {
     };
 
     return (
-      <Dialog fullScreen={fullScreen} open={!!open} onClose={onClose} onExited={this.handleExited} onKeyPress={this.handleKeyPress}>
+      <Dialog fullScreen={fullScreen} open={!!open}
+        onClose={onClose} onExited={this.handleExited} onKeyPress={this.handleKeyPress}>
         <DialogTitle>
           Please fill out your profile details
         </DialogTitle>
 
-        <DialogContent>
+        <DialogContent className={classes.dialog}>
           <FormGroup>
           <this.MyInput label="Full name" placeholder="Sally Smith" name="name" />
           <this.MyInput label="E-mail address" placeholder="sally@gmail.com" name="email" type="email"/>
