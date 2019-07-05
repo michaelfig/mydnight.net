@@ -390,7 +390,7 @@ class App extends React.Component {
           if (user) {
             const p = db.collection('participants').doc(user.uid);
             p.get().then(
-              ss => ss.data(),
+              ss => ss.data() || {},
               e => {},
             ).then(data => {
               const toUpdate = {};

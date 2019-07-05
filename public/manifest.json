@@ -6,8 +6,28 @@
       "src": "favicon.ico",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
-    }
-  ],
+    },
+    {
+			"src": "sb144.png",
+			"sizes": "144x144",
+			"type": "image/png"
+		},
+    {
+			"src": "sb180.png",
+			"sizes": "180x180",
+			"type": "image/png"
+		},
+    {
+			"src": "sb192.png",
+			"sizes": "192x192",
+			"type": "image/png"
+		},
+    {
+			"src": "sb228.png",
+			"sizes": "228x228",
+			"type": "image/png"
+		}
+	],
   "start_url": ".",
   "display": "standalone",
   "theme_color": "#000000",
