@@ -12,6 +12,28 @@ import 'firebase/firestore';
 
 const db = firebase.firestore();
 
+export function getRosterIndex(roster) {
+  let i = 0;
+  let rosterIndex;
+  while (i < roster.length) {
+    if (!roster[i].finishStamp) {
+      if (roster[i].startStamp) {
+        // First playing.
+        rosterIndex = i;
+        break;
+      }
+      // Next not finished.
+      rosterIndex = i;
+    }
+    i ++;
+  }
+    
+  if (rosterIndex === undefined) {
+    rosterIndex = roster.length;
+  }
+  return rosterIndex;
+};
+
 const styles = theme => ({
   nowPlaying: {
     color: 'yellow',
@@ -107,27 +129,8 @@ class RosterContent extends React.Component {
     const { classes } = this.props;
     const showAll = /(^\?|&)all($|=|&)/.test(window.location.search);
 
-    let i = 0;
-    let rosterIndex;
-    while (i < roster.length) {
-      if (!roster[i].finishStamp) {
-        if (roster[i].startStamp) {
-          // First playing.
-          rosterIndex = i;
-          break;
-        }
-        // Next not finished.
-        rosterIndex = i;
-      }
-      i ++;
-    }
-
-    let ended = false;
-    i = roster.length - 1;
-    if (rosterIndex === undefined && roster[i] && roster[i].finishStamp) {
-      rosterIndex = i;
-      ended = true;
-    }
+    const rosterIndex = getRosterIndex(roster);
+    const ended = rosterIndex === roster.length && roster[roster.length - 1].finishStamp;
 
     const toShow = roster.slice(rosterIndex).map((item, i) => {
       if (!showAll && i >= MAX_ENTRIES) {

@@ -14,6 +14,7 @@ import RSVPContent from './content/RSVPContent/RSVPContent';
 import NotFoundContent from './content/NotFoundContent/NotFoundContent';
 import PrivacyContent from './content/PrivacyContent/PrivacyContent';
 
+import SettingsDialog from './dialogs/SettingsDialog/SettingsDialog';
 import SignInDialog from './dialogs/SignInDialog/SignInDialog';
 
 // import LaunchScreen from './layout/LaunchScreen/LaunchScreen';
@@ -147,6 +148,10 @@ class App extends React.Component {
         open: false,
       },
 
+      settingsDialog: {
+        open: false,
+      },
+
       snackbar: {
         autoHideDuration: 0,
         message: '',
@@ -156,7 +161,7 @@ class App extends React.Component {
   }
 
   updateArranger(isArranger) {
-    console.log('updateArranger', isArranger);
+    // console.log('updateArranger', isArranger);
     this.setState({isArranger});
   }
 
@@ -209,6 +214,35 @@ class App extends React.Component {
     });
   };
 
+  openSettingsDialog = () => {
+    const user = this.state.user;
+    if (!user) {
+      return;
+    }
+    firebase.firestore().collection('participants').doc(user.uid).get().then(
+      ss => {
+        const data = ss.data();
+        this.setState({settingsDialog: {open: data}});
+      });
+  };
+
+  saveSettings = (settings, callback) => {
+    const user = this.state.user;
+    firebase.firestore().collection('participants').doc(user.uid).update(settings).then(callback);
+  };
+
+  closeSettingsDialog = (callback) => {
+    this.setState({
+      settingsDialog: {
+        open: false,
+      },
+    }, () => {
+      if (callback && typeof callback === 'function') {
+        callback();
+      }
+    });
+  };
+
   openSnackbar = (message) => {
     this.setState({
       snackbar: {
@@ -240,6 +274,7 @@ class App extends React.Component {
 
     const {
       signInDialog,
+      settingsDialog,
     } = this.state;
 
     const { snackbar } = this.state;
@@ -263,6 +298,7 @@ class App extends React.Component {
 
             onSignInClick={this.openSignInDialog}
             onSignOutClick={this.signOut}
+            onSettingsClick={this.openSettingsDialog}
           />
           <Switch>
             <Route exact path="/" render={() => (<HomeContent/>)} />
@@ -280,6 +316,12 @@ class App extends React.Component {
 
               onClose={this.closeSignInDialog}
             />
+
+            {settingsDialog.open && <SettingsDialog
+              open={settingsDialog.open}
+              onClose={this.closeSettingsDialog}
+              onSave={this.saveSettings}
+            />}
           </Hidden>
 
           <Hidden only={['sm', 'md', 'lg', 'xl']}>
@@ -290,6 +332,13 @@ class App extends React.Component {
 
               onClose={this.closeSignInDialog}
             />
+
+            {settingsDialog.open && <SettingsDialog
+              fullScreen
+              open={settingsDialog.open}
+              onClose={this.closeSettingsDialog}
+              onSave={this.saveSettings}
+            />}
           </Hidden>
 
           <Snackbar
@@ -338,6 +387,20 @@ class App extends React.Component {
           user
         }, () => {
           if (user) {
+            const p = db.collection('participants').doc(user.uid);
+            p.get().then(
+              ss => ss.data(),
+              e => {},
+            ).then(data => {
+              const toUpdate = {};
+              for (const [d, u] of [['email', 'email'], ['phone', 'phoneNumber'], ['name', 'displayName']]) {
+                if (data[d] === undefined) {
+                  toUpdate[d] = user[u];
+                }
+              }
+              return p.update(toUpdate);
+            });
+
             db.collection('arrangers').doc(user.uid).get().then(
               () => this.setState({isArranger: true}),
               () => this.setState({isArranger: false}),

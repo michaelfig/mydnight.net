@@ -59,6 +59,12 @@ class Bar extends React.Component {
     onSignInClick();
   };
 
+  handleSettingsClick = () => {
+    const { onSettingsClick } = this.props;
+    this.closeMenu();
+    onSettingsClick();
+  };
+
   render() {
     // Properties
     const { title, isPerformingAuthAction, isSignedIn, user } = this.props;
@@ -76,8 +82,9 @@ class Bar extends React.Component {
               </IconButton>
 
               <Menu anchorEl={menu.anchorEl} open={Boolean(menu.anchorEl)} onClose={this.closeMenu}>
+                <MenuItem disabled={isPerformingAuthAction} onClick={this.handleSettingsClick}>Profile...</MenuItem>
                 {user.isAnonymous && 
-                  <MenuItem disabled={isPerformingAuthAction} onClick={this.handleSignInClick}>Link Account</MenuItem>
+                  <MenuItem disabled={isPerformingAuthAction} onClick={this.handleSignInClick}>Link Account...</MenuItem>
                 }
                 <MenuItem disabled={isPerformingAuthAction} onClick={this.handleSignOutClick}>Sign out</MenuItem>
               </Menu>

@@ -6,6 +6,8 @@ import CardActions from '@material-ui/core/CardActions';
 import { withStyles } from '@material-ui/core/styles';
 // import EmptyState from '../../layout/EmptyState/EmptyState';
 
+import {getRosterIndex} from '../RosterContent/RosterContent';
+
 import firebase from 'firebase/app';
 import 'firebase/firestore';
 import IconButton from '@material-ui/core/IconButton';
@@ -110,25 +112,7 @@ class ArrangerContent extends React.Component {
           roster.push(item);
         });
 
-        let i = 0;
-        let rosterIndex;
-        while (i < roster.length) {
-          if (!roster[i].finishStamp) {
-            if (roster[i].startStamp) {
-              // First playing.
-              rosterIndex = i;
-              break;
-            }
-            // Next not finished.
-            rosterIndex = i;
-          }
-          i ++;
-        }
-    
-        if (rosterIndex === undefined) {
-          rosterIndex = roster.length;
-        }
-    
+        const rosterIndex = getRosterIndex(roster);
         this.setState({roster, rosterIndex});
       });
     this.unsubscribeOrder = firebase.firestore().collection('order')
