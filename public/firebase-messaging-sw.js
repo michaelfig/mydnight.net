@@ -1,3 +1,10 @@
+
+self.addEventListener('fetch', function(event) {
+  // Don't do any caching.
+  // TODO: We may want to eventually.
+  event.respondWith(fetch(event.request));
+});
+
 importScripts("https://www.gstatic.com/firebasejs/5.9.4/firebase-app.js");
 importScripts("https://www.gstatic.com/firebasejs/5.9.4/firebase-messaging.js");
 firebase.initializeApp({
@@ -39,4 +46,3 @@ messaging.setBackgroundMessageHandler(function (payload) {
       Object.assign({data: payload.data}, payload.data));
 
 });
-

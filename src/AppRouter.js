@@ -12,14 +12,15 @@ export default class AppRouter extends React.Component {
   }
   
   componentWillMount() {
-    import('./App').then(module =>
-      this.setState({App: module.default}));
+    import('./App').then(module => {
+      this.setState({App: module.default});
+    });
   }
 
   render() {
     const {App} = this.state;
     if (!App) {
-      return <div style={{display: 'flex', flexDirection: 'column', height: '100vh'}}><LaunchScreen/></div>;
+      return <div style={{background: '#607d8b', display: 'flex', flexDirection: 'column', height: '100vh'}}><LaunchScreen/></div>;
     }
     return <Router><App/></Router>
   }

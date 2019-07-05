@@ -75,7 +75,9 @@ class LiveStreamContent extends React.Component {
       }
       this.unsubscribeSelf = firebase.firestore().collection('participants').doc(user.uid).onSnapshot(ss => {
         const data = ss.data();
-        this.setState({attending: data.attending});
+        if (data) {
+          this.setState({attending: data.attending});
+        }
       });
     });
     this.unsubscribePublic = col.doc('publicInfo').onSnapshot(ss => {
