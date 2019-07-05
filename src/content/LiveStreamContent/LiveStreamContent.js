@@ -28,7 +28,7 @@ const styles = (theme) => ({
   hidden: {
     visibility: 'hidden',
   },
-  overallocated: {
+  standout: {
     color: 'yellow',
   },
 });
@@ -117,7 +117,7 @@ class LiveStreamContent extends React.Component {
           advice = `; please consider giving up your spot`;
         }
         SubH = <b>{-remaining} spots are overbooked{advice}</b>;
-        subclass = classes.overallocated;
+        subclass = classes.standout;
       } else {
         SubH = <i>{remaining}/{total} spots remaining</i>;
       }
@@ -133,11 +133,12 @@ class LiveStreamContent extends React.Component {
       <CardContent>
         <p>The memorial begins {md.fromNow()}, {md.toString()} (Central Standard Time).</p>
 
-        <p>Please try to use <b>as few spots as possible</b> by gathering with friends and family to
-        participate in the Live Stream.</p>
+        <p>Please try to use <span className={classes.standout}>as few spots as possible</span> by
+        gathering with friends and family to participate in the Live Stream.</p>
 
-        <p className={attending ? undefined : classes.hidden}>If you want to test your audio/video setup, you may join the live stream anytime before
-          the memorial begins.</p>
+        <p className={attending ? undefined : classes.hidden}>Please test your computer audio/video setup
+          by <span className={classes.standout}>joining the live stream sometime before the memorial begins</span>.
+          Right now is as good a time as any!</p>
       </CardContent>
       <CardActions className={classes.center}>
       {attending && url && <Button color="secondary" variant="contained" target="_blank" href={url}>Join Stream</Button>}

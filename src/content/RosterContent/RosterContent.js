@@ -130,7 +130,7 @@ class RosterContent extends React.Component {
     const showAll = /(^\?|&)all($|=|&)/.test(window.location.search);
 
     const rosterIndex = getRosterIndex(roster);
-    const ended = rosterIndex === roster.length && roster[roster.length - 1].finishStamp;
+    const ended = roster.length > 0 && rosterIndex === roster.length && roster[roster.length - 1].finishStamp;
 
     const toShow = roster.slice(rosterIndex).map((item, i) => {
       if (!showAll && i >= MAX_ENTRIES) {
