@@ -34,6 +34,7 @@ import 'firebase/auth';
 import 'firebase/firestore';
 import 'firebase/performance';
 import 'firebase/messaging';
+import LiveStreamContent from './content/LiveStreamContent/LiveStreamContent';
 
 let messaging;
 try {
@@ -304,6 +305,7 @@ class App extends React.Component {
             <Route exact path="/" render={() => (<HomeContent/>)} />
             <Route path="/arrange" render={() => (<ArrangerContent/>)} />
             <Route path="/rsvp" render={() => (<RSVPContent/>)} />
+            <Route path="/livestream" render={() => (<LiveStreamContent/>)} />
             <Route path="/privacy" render={() => (<PrivacyContent/>)} />
             <Route component={NotFoundContent} />
           </Switch>

@@ -8,6 +8,7 @@ import { withStyles } from '@material-ui/core/styles';
 import ArrangeIcon from '@material-ui/icons/CompareArrows';
 import HomeIcon from '@material-ui/icons/Home';
 import RSVPIcon from '@material-ui/icons/Email';
+import LiveStreamIcon from '@material-ui/icons/Visibility';
 
 const style = {
   stickyBottom: {
@@ -16,43 +17,32 @@ const style = {
   },
 };
 
+const buttonUrl = [
+  '/',
+  '/livestream',
+  '/rsvp',
+  '/arrange',
+];
+
+const urlOffset = {};
+buttonUrl.forEach((url, i) => urlOffset[url] = i);
+
 function Bottom({history, location, classes, isArranger}) {
   const [value, setValue] = React.useState(0);
 
-  let actualValue;
-  switch (location.pathname) {
-    case '/':
-      actualValue = 0;
-      break;
-    case '/rsvp':
-      actualValue = 1;
-      break;
-    case '/arrange':
-      actualValue = 2;
-      break;
-    default:
-      actualValue = value;
-      break;
-  }
+  const actualValue = urlOffset[location.pathname] || value;
   return (<BottomNavigation
         value={actualValue}
         onChange={(event, newValue) => {
-          switch (newValue) {
-            case 1:
-              history.push('/rsvp');
-              break;
-            case 2:
-              history.push('/arrange');
-              break;
-            default:
-              history.push('/');
-          }
+          const url = buttonUrl[newValue] || '/';
+          history.push(url);
           setValue(newValue);
         }}
         className={classes.stickyBottom}
         showLabels
         >
         <BottomNavigationAction label="Home" icon={<HomeIcon />} />
+        <BottomNavigationAction label="Live Stream" icon={<LiveStreamIcon />} />
         <BottomNavigationAction label="RSVP" icon={<RSVPIcon />} />
       { isArranger && <BottomNavigationAction label="Arrange" icon={<ArrangeIcon />} /> }
       </BottomNavigation>);
