@@ -22,8 +22,10 @@ const styles = (theme) => ({
   
 });
 
+export const memorialDate = new Date('2019-07-07T13:00-0600');
+
 class HomeContent extends Component {
-  when = new Date('2019-07-07T13:00-0600').toLocaleString();
+  when = memorialDate.toLocaleString();
   
   render() {
     // Styling

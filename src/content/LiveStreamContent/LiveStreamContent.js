@@ -11,7 +11,10 @@ import firebase from 'firebase/app';
 import 'firebase/firestore';
 import 'firebase/auth';
 
+import moment from 'moment';
+
 import Button from '@material-ui/core/Button';
+import { memorialDate } from '../HomeContent/HomeContent';
 
 const styles = (theme) => ({
   card: {
@@ -79,6 +82,7 @@ class LiveStreamContent extends React.Component {
       const data = ss.data();
       this.setState(data);
     });
+    this.minuteTimer = setInterval(() => this.setState({now: new Date()}), 30000);
   }
 
   componentWillUnmount() {
@@ -94,6 +98,7 @@ class LiveStreamContent extends React.Component {
     if (this.unsubscribeSelf) {
       this.unsubscribeSelf();
     }
+    clearInterval(this.minuteTimer);
   }
 
   render() {
@@ -120,11 +125,14 @@ class LiveStreamContent extends React.Component {
       SubH = <i>??? spots remaining</i>;
     }
 
+    const md = moment(memorialDate);
     return <EmptyState><Card className={classes.card}>
       <CardHeader title="Memorial Live Stream" subheader={SubH} classes={{subheader: subclass}}/>
       <CardContent>
-        Please try to use <b>as few spots as possible</b> by gathering with friends and family to
-        participate in the Live Stream.
+        <p>The memorial begins {md.fromNow()}, {md.toString()} (Central Standard Time).</p>
+
+        <p>Please try to use <b>as few spots as possible</b> by gathering with friends and family to
+        participate in the Live Stream.</p>
 
         <p className={attending ? undefined : classes.hidden}>If you want to test your audio/video setup, you may join the live stream anytime before
           the memorial begins.</p>
