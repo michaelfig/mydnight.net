@@ -26,7 +26,8 @@ const styles = (theme) => ({
     justifyContent: 'center',
   },
   hidden: {
-    visibility: 'hidden',
+    display: 'none',
+    //visibility: 'hidden',
   },
   standout: {
     color: 'yellow',
@@ -135,10 +136,6 @@ class LiveStreamContent extends React.Component {
 
         <p>Please try to use <span className={classes.standout}>as few spots as possible</span> by
         gathering with friends and family to participate in the Live Stream.</p>
-
-        <p className={attending ? undefined : classes.hidden}>Please test your computer audio/video setup
-          by <span className={classes.standout}>joining the live stream sometime before the memorial begins</span>.
-          Right now is as good a time as any!</p>
       </CardContent>
       <CardActions className={classes.center}>
       {attending && url && <Button color="secondary" variant="contained" target="_blank" href={url}>Join Stream</Button>}
@@ -147,6 +144,11 @@ class LiveStreamContent extends React.Component {
       {attending && <Button variant="contained"
           onClick={this.updateAttendance(false)}>Give up your spot</Button>}
       </CardActions>
+      <CardContent>
+      <p className={attending ? undefined : classes.hidden}>Please test your computer audio/video setup
+          by <span className={classes.standout}>joining the live stream sometime before the memorial begins</span>.
+          Right now is as good a time as any!</p>
+      </CardContent>
     </Card></EmptyState>;
   }
 }
