@@ -80,9 +80,9 @@ const styles = theme => ({
 
   time: {
     position: 'absolute',
-    top: 'calc(100% - 14vmin)',
+    bottom: theme.spacing(2),
     fontSize: '9vmin',
-    left: 'calc(100% - 42vmin)',
+    right: theme.spacing(2),
     color: 'yellow',
     margin: 0,
   },

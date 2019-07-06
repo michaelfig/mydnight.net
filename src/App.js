@@ -13,6 +13,7 @@ import RosterContent from './content/RosterContent/RosterContent';
 import RSVPContent from './content/RSVPContent/RSVPContent';
 import NotFoundContent from './content/NotFoundContent/NotFoundContent';
 import PrivacyContent from './content/PrivacyContent/PrivacyContent';
+import RegisterContent from './content/RegisterContent/RegisterContent';
 
 import SettingsDialog from './dialogs/SettingsDialog/SettingsDialog';
 import SignInDialog from './dialogs/SignInDialog/SignInDialog';
@@ -302,6 +303,7 @@ class App extends React.Component {
             <Route path="/rsvp" render={() => (<RSVPContent/>)} />
             <Route path="/livestream" render={() => (<LiveStreamContent/>)} />
             <Route path="/privacy" render={() => (<PrivacyContent/>)} />
+            <Route path="/present" render={() => (<RegisterContent/>)} />
             <Route component={NotFoundContent} />
           </Switch>
           <Bottom isArranger={isArranger} />

@@ -7,7 +7,7 @@ import { withStyles } from '@material-ui/core/styles';
 
 import ArrangeIcon from '@material-ui/icons/CompareArrows';
 import HomeIcon from '@material-ui/icons/Home';
-import RSVPIcon from '@material-ui/icons/Email';
+import RegisterIcon from '@material-ui/icons/PanTool';
 import LiveStreamIcon from '@material-ui/icons/Visibility';
 
 const style = {
@@ -20,7 +20,7 @@ const style = {
 const buttonUrl = [
   '/',
   '/livestream',
-  '/rsvp',
+  '/present',
   '/arrange',
 ];
 
@@ -43,7 +43,7 @@ function Bottom({history, location, classes, isArranger}) {
         >
         <BottomNavigationAction label="Home" icon={<HomeIcon />} />
         <BottomNavigationAction label="Live Stream" icon={<LiveStreamIcon />} />
-        <BottomNavigationAction label="RSVP" icon={<RSVPIcon />} />
+        <BottomNavigationAction label="Present" icon={<RegisterIcon />} />
       { isArranger && <BottomNavigationAction label="Arrange" icon={<ArrangeIcon />} /> }
       </BottomNavigation>);
 }
