@@ -7,6 +7,9 @@ import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core/styles';
 // import EmptyState from '../../layout/EmptyState/EmptyState';
 
+import MicIcon from '@material-ui/icons/Mic';
+import ProxyIcon from '@material-ui/icons/Notes';
+
 import firebase from 'firebase/app';
 import 'firebase/firestore';
 
@@ -42,6 +45,13 @@ const styles = theme => ({
   details: {
     color: 'yellow',
     fontSize: '9vmin',
+  },
+  icons: {
+    height: '6vmin',
+    width: '6vmin',
+  },
+  media: {
+    fontSize: '6vmin',
   },
   subheader: {
     color: 'yellow',
@@ -128,6 +138,7 @@ class RosterContent extends React.Component {
     const { roster, MAX_ENTRIES } = this.state;
     const { classes } = this.props;
     const showAll = /(^\?|&)all($|=|&)/.test(window.location.search);
+    const showMedia = /(^\?|&)media($|=|&)/.test(window.location.search);
 
     const rosterIndex = getRosterIndex(roster);
     const ended = roster.length > 0 && rosterIndex === roster.length && roster[roster.length - 1].finishStamp;
@@ -137,6 +148,19 @@ class RosterContent extends React.Component {
         return undefined;
       }
       const home = item.home ? ` (${item.home})` : '';
+      const media = showMedia && item.text && item.text.split('\n').reduce((prior, line, i) => {
+        prior.push(<br key={`br${i}`} />, <span key={i}>{line}</span>);
+        return prior;
+      }, []);
+  
+      const icons = [];
+      if (item.recorded === 'audio') {
+        icons.push(<MicIcon className={classes.icons} key='audio'/>);
+      }
+      if (item.recorded === 'proxy') {
+        icons.push(<ProxyIcon className={classes.icons} key='proxy'/>);
+      }
+
       if (item.startStamp && !item.finishStamp) {
         const Title = <React.Fragment>{item.order}.&nbsp;<i>{item.title}</i></React.Fragment>;
         const d = new Date();
@@ -146,7 +170,13 @@ class RosterContent extends React.Component {
         return (<Card raised={true} key={item.id} className={classes.card}>
           <CardHeader title={Title} subheader={Subh}
             classes={{title: classes.nowPlaying, subheader: classes.subheader}}/>
-          <CardContent className={classes.details}>{item.relationship}{home}</CardContent>
+          <CardContent className={classes.details}>
+          <div style={{display: 'flex', flexDirection: 'row'}}>
+            <div style={{flexGrow: 1}}>{item.relationship}{home}</div>
+            <div className={classes.icons}>{icons}</div>
+          </div>
+          <Typography className={classes.media}>{media}</Typography>
+          </CardContent>
           </Card>);
       } else {
         const Title = <React.Fragment>{item.order}.&nbsp;{item.name}{home}</React.Fragment>;
