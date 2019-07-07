@@ -15,6 +15,11 @@ import moment from 'moment';
 
 import Button from '@material-ui/core/Button';
 import { memorialDate } from '../HomeContent/HomeContent';
+import Dialog from '@material-ui/core/Dialog';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import DialogContent from '@material-ui/core/DialogContent';
+import DialogActions from '@material-ui/core/DialogActions';
+import Link from '@material-ui/core/Link';
 
 const styles = (theme) => ({
   card: {
@@ -39,6 +44,7 @@ class LiveStreamContent extends React.Component {
     super(props);
     this.state = {
       attending: false,
+      open: false,
     };
   }
 
@@ -104,6 +110,13 @@ class LiveStreamContent extends React.Component {
     clearInterval(this.minuteTimer);
   }
 
+  openPhone = () => {
+    this.setState({open: true});
+  };
+  closePhone = () => {
+    this.setState({open: false});
+  };
+
   render() {
     // Styling
     const {classes} = this.props;
@@ -140,9 +153,25 @@ class LiveStreamContent extends React.Component {
         <p className={attending ? undefined : classes.hidden}>Please test your computer audio/video setup
           by <span className={classes.standout}>joining the live stream sometime before the memorial begins</span>.
           Right now is as good a time as any!</p>
+        <Dialog open={this.state.open} onClose={this.closePhone}>
+          <DialogTitle>Join by Phone</DialogTitle>
+          <DialogContent>
+            For telephone (long distance charges may apply) try:
+            
+            <p>Canada <Link target="_blank" href="tel:+16475580588">+1 647 558 0588</Link> (or <Link target="_blank" href="tel:+16475580588,,255772843#,#">one-touch mobile</Link>)</p>
+            <p>United States <Link target="_blank" href="tel:+17207072699">+1 720 707 2699</Link>, (or <Link target="_blank" href="tel:+17207072699,,255772843#,#">one-touch mobile</Link>)</p>
+
+            <p>The meeting ID is: <span className={classes.standout}>255 772 843 #</span>,
+            then <span className={classes.standout}>press # again</span> when prompted for the participant ID.</p>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={this.closePhone}>Cancel</Button>
+          </DialogActions>
+          </Dialog>
       </CardContent>
       <CardActions className={classes.center}>
-      {attending && url && <Button color="secondary" variant="contained" target="_blank" href={url}>Join Stream</Button>}
+      {attending && url && <Button color="secondary" variant="contained" target="_blank" href={url}>Join Internet</Button>}
+      {attending && <Button color="secondary" variant="contained" onClick={this.openPhone}>Join Telephone</Button>}
       {!attending && <Button color="secondary" variant="contained"
           onClick={this.updateAttendance(true)}>Claim a spot</Button>}
       {attending && <Button variant="contained"
