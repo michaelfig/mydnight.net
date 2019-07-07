@@ -7,6 +7,7 @@ import { withStyles } from '@material-ui/core/styles';
 // import EmptyState from '../../layout/EmptyState/EmptyState';
 
 import {getRosterIndex} from '../RosterContent/RosterContent';
+import {assignPriority, priorityOrder} from '../RegisterContent/RegisterContent';
 
 import firebase from 'firebase/app';
 import 'firebase/firestore';
@@ -78,27 +79,62 @@ class ArrangerContent extends React.Component {
       roster: [],
       rosterIndex: 0,
       all: {},
+      rawPool: {},
       participants: {},
     };
   }
 
   componentDidMount() {
-    this.unsubscribePool = firebase.firestore().collection('pool')
+    const part = firebase.firestore().collection('participants');
+    this.unsubscribePresenting = {};
+    this.unsubscribeParticipants = part
       .onSnapshot(querySnapshot => {
-        const pool = {};
+        const participants = this.state.participants;
+        const remove = {...participants};
         querySnapshot.forEach(ss => {
-          pool[ss.id] = ss.data();
+          delete remove[ss.id];
+          if (participants[ss.id]) {
+            return;
+          }
+          participants[ss.id] = {...ss.data(), presenting: {}};
+          this.unsubscribePresenting[ss.id] = part.doc(ss.id).collection('presenting')
+            .onSnapshot(pquery => {
+              const participants = this.state.participants;
+              const premove = participants[ss.id].presenting;
+              const presenting = {};
+              let changed = false;
+              const rawPool = this.state.rawPool;
+              pquery.forEach(pss => {
+                changed = true;
+                presenting[pss.id] = pss.data();
+                rawPool[pss.id] = {...pss.data(), participant: ss.id};
+                delete premove[pss.id];
+              });
+              participants[ss.id].presenting = presenting;
+              Object.keys(premove).forEach(pkey => {
+                changed = true;
+                delete rawPool[pkey];
+              });
+              this.setState({participants, ...(changed ? {rawPool} : {})});
+            });
+          const rawPool = this.state.rawPool;
+          let changed = false;
+          Object.keys(remove).forEach(key => {
+            if (!participants[key]) {
+              return;
+            }
+            this.unsubscribePresenting[key]();
+            delete this.unsubscribePresenting[key];
+            Object.keys(participants[key].presenting).forEach(pkey => {
+              changed = true;
+              delete rawPool[pkey];
+            });
+            delete participants[key];
+          });
+          this.setState({participants, ...(changed ? {rawPool} : {})})
         });
-        this.setState({all: pool});
-      }, err => console.log('cannot listen to pool', err));
-    this.unsubscribeParticipants = firebase.firestore().collection('participants')
-      .onSnapshot(querySnapshot => {
-        const participants = {};
-        querySnapshot.forEach(ss => {
-          participants[ss.id] = ss.data();
-        });
-        this.setState({participants});
-      }, err => console.log('cannot listen to participants', err));
+      });
+
     this.unsubscribeRoster = firebase.firestore().collection('roster')
       .orderBy('order')
       .onSnapshot(querySnapshot => {
@@ -115,41 +151,19 @@ class ArrangerContent extends React.Component {
         const rosterIndex = getRosterIndex(roster);
         this.setState({roster, rosterIndex});
       });
-    this.unsubscribeOrder = firebase.firestore().collection('order')
-      .onSnapshot(querySnapshot => {
-        const pool = {};
-        querySnapshot.forEach(ss => {
-          const data = ss.data();
-          if (data.pool !== undefined) {
-            pool[ss.id] = data;
-          }
-        });
-        const asc = ([aid, a], [bid, b]) =>
-          a.priority < b.priority ? -1 :
-          (a.priority === b.priority ?
-            (a.order < b.order ? -1 :
-              (a.order === b.order ?
-                (aid < bid ? -1 :
-                  (aid === bid ? 0 : 1))
-                : 1))
-            : 1);
-        const poolOrder = Object.entries(pool).sort(asc);
-        this.setState({poolOrder});
-      }, err => console.log('cannot listen to order', err));
   }
 
   componentWillUnmount() {
-    if (this.unsubscribeOrder) {
-      this.unsubscribeOrder();
-    }
     if (this.unsubscribeParticipants) {
       this.unsubscribeParticipants();
     }
+    if (this.unsubscribePresenting) {
+      for (const p of Object.values(this.unsubscribePresenting)) {
+        p();
+      }
+    }
     if (this.unsubscribeRoster) {
       this.unsubscribeRoster();
-    }
-    if (this.unsubscribePool) {
-      this.unsubscribePool();
     }
   }
 
@@ -173,33 +187,40 @@ class ArrangerContent extends React.Component {
         return;
       }
 
-      const batch = db.batch();
-      if (to && to.addToRoster) {
-        const toSet = {...to};
-        const ss = await firebase.firestore().collection('participants').doc(to.id).get();
-        const data = ss.data();
-        for (const key of ['home', 'name', 'relationship']) {
-          if (data[key]) {
-            toSet[key] = data[key];
+      let pss;
+      if (to) {
+        const presentRef = db.collection('participants').doc(to.participant).collection('presenting').doc(to.id);
+        pss = await presentRef.get();
+      }
+      await db.runTransaction(tx => {
+        if (to) {
+          const rosterRef = db.collection('roster').doc(to.id);
+          const stamps = {
+            startStamp: firebase.firestore.FieldValue.serverTimestamp(),
+            finishStamp: null,
+          };
+          if (to.addToRoster) {
+            const docInfo = db.collection('roster').doc('info');
+            const ss = tx.get(docInfo);
+            const data = ss.exists ? ss.data() : {};
+            const order = (data.lastOrder || 0) + 1;
+            const pdata = pss.exists ? pss.data() : {};
+            tx.update(rosterRef, {
+              ...pdata,
+              order,
+              ...stamps,
+            });
+            tx.set(docInfo, {...data, lastOrder: order});
+          } else {
+            tx.update(rosterRef, stamps);
           }
         }
-        batch.set(db.collection('roster').doc(toSet.id), toSet);
-        to = toSet;
-      }
-
-      if (to) {
-        batch.update(db.collection('roster').doc(to.id), {
-          // startStamp: to.startStamp || firebase.firestore.Timestamp.now(),
-          startStamp: firebase.firestore.Timestamp.now(),
-          finishStamp: null,
-        });
-      }
-      if (from) {
-        batch.update(db.collection('roster').doc(from.id), {
-          finishStamp: firebase.firestore.Timestamp.now(),
-        });
-      }
-      await batch.commit();
+        if (from) {
+          tx.update(db.collection('roster').doc(from.id), {
+            finishStamp: firebase.firestore.FieldValue.serverTimestamp(),
+          });
+        }
+      });
     } catch (e) {
       console.log(`Error goto from`, from, 'to', to, e);
     }
@@ -209,22 +230,21 @@ class ArrangerContent extends React.Component {
     // Styling
     const {classes} = this.props;
 
-    const {replenish, roster, poolOrder, all, participants, rosterIndex} = this.state;
+    const {replenish, roster, rawPool, participants, rosterIndex} = this.state;
 
     const pool = [];
-    const inPool = {...all};
+    const inPool = {...rawPool};
     roster.forEach(item => {
       delete inPool[item.id];
     });
 
-    poolOrder.forEach(([id, order]) => {
-      const item = inPool[id];
-      const participant = item && participants[item.participant];
-      if (participant) {
-        pool.push({...participant, ...item, id, order});
-        delete(inPool[id]);
-      }
+    Object.entries(inPool).map(assignPriority).sort(priorityOrder).forEach(([id, item]) => {
+      const participant = (item && participants[item.participant]) || {};
+      pool.push({...participant, ...item, id});
+      delete(inPool[id]);
     });
+
+    console.log('pool', pool);
 
     const makeCard = pool => item => {
       const order = pool ? '' : <React.Fragment>{item.order}.&nbsp;</React.Fragment>
@@ -251,7 +271,7 @@ class ArrangerContent extends React.Component {
     
     const poolItems = pool.map(makeCard(true));
     const comingItems = roster.slice(Math.max(rosterIndex - 1, 0)).map(makeCard())
-    console.log(roster, pool);
+    // console.log(roster, pool);
     return <React.Fragment>
       <FormGroup className={classes.controls}>
         <IconButton aria-label="Previous"
@@ -280,7 +300,6 @@ class ArrangerContent extends React.Component {
           }
           label="Take from pool"
           disabled={!pool[0]}
-          labelPlacement="bottom"
         />
       </FormGroup>
       <div className={classes.container}>

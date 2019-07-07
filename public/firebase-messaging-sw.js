@@ -2,7 +2,7 @@
 self.addEventListener('fetch', function(event) {
   // Don't do any caching.
   // TODO: We may want to eventually.
-  event.respondWith(fetch(event.request));
+  event.respondWith(fetch(event.request).catch());
 });
 
 importScripts("https://www.gstatic.com/firebasejs/5.9.4/firebase-app.js");

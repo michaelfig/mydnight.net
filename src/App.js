@@ -33,7 +33,7 @@ import readingTime from 'reading-time';
 import firebase from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
-import 'firebase/performance';
+// import 'firebase/performance';
 import 'firebase/messaging';
 import LiveStreamContent from './content/LiveStreamContent/LiveStreamContent';
 
@@ -46,7 +46,7 @@ try {
 const db = firebase.firestore();
 
 // eslint-disable-next-line no-unused-vars
-const performance = firebase.performance();
+// const performance = firebase.performance();
 
 firebase.auth().useDeviceLanguage();
 
@@ -303,7 +303,7 @@ class App extends React.Component {
             <Route path="/rsvp" render={() => (<RSVPContent/>)} />
             <Route path="/livestream" render={() => (<LiveStreamContent/>)} />
             <Route path="/privacy" render={() => (<PrivacyContent/>)} />
-            <Route path="/present" render={() => (<RegisterContent/>)} />
+            <Route path="/present" render={() => (<RegisterContent isArranger={isArranger} />)} />
             <Route component={NotFoundContent} />
           </Switch>
           <Bottom isArranger={isArranger} />
@@ -393,7 +393,7 @@ class App extends React.Component {
             const p = db.collection('participants').doc(user.uid);
             p.get().then(
               ss => ss.data() || {},
-              e => {},
+              e => ({}),
             ).then(data => {
               const toUpdate = {};
               for (const [d, u] of [['email', 'email'], ['phone', 'phoneNumber'], ['name', 'displayName']]) {

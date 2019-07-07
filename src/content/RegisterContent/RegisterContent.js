@@ -9,6 +9,9 @@ import CardContent from '@material-ui/core/CardContent';
 import CardActions from '@material-ui/core/CardActions';
 import Grid from '@material-ui/core/Grid';
 
+import Select from '@material-ui/core/Select';
+import MenuItem from '@material-ui/core/MenuItem';
+
 import Button from '@material-ui/core/Button';
 import Fab from '@material-ui/core/Fab';
 import FormControl from '@material-ui/core/FormControl';
@@ -27,6 +30,44 @@ import 'firebase/firestore';
 import IconButton from '@material-ui/core/IconButton/IconButton';
 import EditIcon from '@material-ui/icons/Edit';
 import DeleteIcon from '@material-ui/icons/Delete';
+
+// Assign a priority to the entry.
+export const assignPriority = ([id, item]) => {
+  let priority;
+  switch (item.preference) {
+    case 'immediate':
+      priority = 500;
+      break;
+    case 'beginning':
+      priority = 1000;
+      break;
+    case 'end':
+      priority = 3000;
+      break;
+    case 'veryEnd':
+      priority = 3500;
+      break;
+    case 'after':
+      priority = 4000;
+      break;
+    default:
+      priority = 2000;
+  }
+  const order = item.stamp ? item.stamp.seconds + item.stamp.nanoseconds / 10 ** 9: +Infinity;
+  return [id, {...item, priority, order}];
+};
+
+// Priority is low to high, order is low to high.
+export const priorityOrder = ([aid, a], [bid, b]) => (
+  a.priority < b.priority ? -1 :
+    a.priority === b.priority ? (
+      a.order < b.order ? -1 :
+        a.order === b.order ? (
+          aid < bid ? -1 :
+            aid === bid ? 0 : 1
+        ) : 1
+      )   : 1
+);
 
 const styles = (theme) => ({
   content: {
@@ -77,13 +118,14 @@ class RegisterContent extends React.Component {
           ss => {
             const data = ss.exists ? ss.data() : {};
             let upper = 0, lower = 0;
+            let home = data.home || '';
             for (const key of ['email', 'phone', 'name', 'home', 'relationship']) {
               if (data[key]) {
                 upper ++;
               }
               lower ++;
             }
-            this.setState({profileRatio: [upper, lower]});
+            this.setState({profileRatio: [upper, lower], home});
           });
         this.unsubscribePresenting = participant.collection('presenting').onSnapshot(
           docs => {
@@ -106,6 +148,9 @@ class RegisterContent extends React.Component {
       name: user.displayName || 'Anonymous',
       preference: 'any',
       recorded: 'video',
+      home: this.state.home || '',
+      user: user.displayName || '',
+      venue: 'oxbow',
     }};
   };
 
@@ -145,7 +190,7 @@ class RegisterContent extends React.Component {
 
   render() {
     // Properties
-    const { cancelText, okText } = this.props;
+    const { cancelText, okText, isArranger } = this.props;
 
     // Events
     const { openProfile } = this.props;
@@ -154,7 +199,7 @@ class RegisterContent extends React.Component {
 
     const { profileRatio, presenting, editing, editId, dismissed } = this.state;
 
-    const { name, title, text, recorded, preference } = editing || {};
+    const { name, title, text, venue, home, recorded, preference, user } = editing || {};
 
     const disableOkButton = false;
     const highlightOkButton = true;
@@ -173,18 +218,6 @@ class RegisterContent extends React.Component {
       </CardActions>
     </Card>
 
-    const asc = ([aid, a], [bid, b]) => (
-      a.stamp === null && b.stamp !== null ? -1 :
-        a.stamp === null && b.stamp === null ? (
-      a.stamp.seconds < b.stamp.seconds ? -1 :
-        a.stamp.seconds === b.stamp.seconds ? 
-          (a.stamp.nanoseconds < b.stamp.nanoseconds ? -1 :
-            a.stamp.nanoseconds === b.stamp.nanoseconds ? (
-              aid < bid ? -1 : aid === bid ? 0 : 1
-            ) : 1
-          ) : 1
-        ) : 1
-    );
     const buildEditor = (pid, p) => (
       <Card key={pid || 'new'} className={classes.card}>
         <CardHeader title={!pid ? "New Presentation" : "Edit Presentation"} />
@@ -194,7 +227,7 @@ class RegisterContent extends React.Component {
           <FormControl margin='normal' style={{width: '100%'}}>
             <InputLabel htmlFor="present-id-title">Your name</InputLabel>
             <Input id="present-id-title"
-              onChange={e => this.setState({editing: {...this.state.editing, name: e.target.value}})}
+              onChange={e => this.setState({editing: {...this.state.editing, name: e.target.value, ...(user ? {} : {user: e.target.value})}})}
               value={name}/>
           </FormControl>
           </Grid>
@@ -208,7 +241,38 @@ class RegisterContent extends React.Component {
           </Grid>
 
           <Grid item xs={12} md={6}>
-          <FormControl margin='normal'>
+          <FormControl margin='normal' style={{width: '100%'}}>
+            <InputLabel htmlFor="present-id-home">Your city/town</InputLabel>
+            <Input id="present-id-home"
+              onChange={e => this.setState({editing: {...this.state.editing, home: e.target.value}})}
+              value={home}/>
+          </FormControl>
+          </Grid>
+
+          <Grid item xs={6} sm={2}>
+          <FormControl margin='normal' style={{width: '100%'}}>
+            <InputLabel htmlFor="present-id-venue">Current location</InputLabel>
+            <Select id="present-id-venue"
+              onChange={e => this.setState({editing: {...this.state.editing, venue: e.target.value}})}
+              value={venue}
+            >
+              <MenuItem value="oxbow">Oxbow</MenuItem>
+              <MenuItem value="livestream">Live Stream</MenuItem>
+            </Select>
+          </FormControl>
+          </Grid>
+
+          <Grid item xs={6} sm={4}>
+          <FormControl margin='normal' disabled={venue !== 'livestream'} style={{width: '100%'}}>
+            <InputLabel htmlFor="present-id-user">Live stream user name</InputLabel>
+            <Input id="present-id-user"
+              onChange={e => this.setState({editing: {...this.state.editing, user: e.target.value}})}
+              value={user}/>
+          </FormControl>
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+          <FormControl margin='normal' style={{width: '100%'}}>
             <FormLabel component="legend">Presentation order preference:</FormLabel>
             <RadioGroup
               aria-label="Order preference"
@@ -216,16 +280,18 @@ class RegisterContent extends React.Component {
               value={preference}
               onChange={ev => this.setState({editing: {...editing, preference: ev.target.value}})}
             >
+    {isArranger && <FormControlLabel value="immediate" control={<Radio />} label="Immediate" />}
               <FormControlLabel value="any" control={<Radio />} label="Any" />
               <FormControlLabel value="beginning" control={<Radio />} label="Near the beginning of the service" />
               <FormControlLabel value="end" control={<Radio />} label="Near the end of the service" />
+    {isArranger && <FormControlLabel value="veryEnd" control={<Radio />} label="At the very end" />}
               <FormControlLabel value="after" control={<Radio />} label="Record after the service" />
             </RadioGroup>
           </FormControl>
           </Grid>
 
           <Grid item xs={12} md={6}>
-          <FormControl margin='normal'>
+          <FormControl margin='normal' style={{width: '100%'}}>
             <FormLabel component="legend">Recording preference:</FormLabel>
             <RadioGroup
               aria-label="Recording"
@@ -242,7 +308,7 @@ class RegisterContent extends React.Component {
 
           <Grid item xs={12}>
           <FormControl margin='normal' style={{width: '100%'}}>
-            <InputLabel htmlFor="present-id-text">Presentation text</InputLabel>
+            <InputLabel htmlFor="present-id-text">Presentation text (if any)</InputLabel>
             <Input id="present-id-text"
               onChange={e => this.setState({editing: {...this.state.editing, text: e.target.value}})}
               multiline={true}
@@ -276,7 +342,7 @@ class RegisterContent extends React.Component {
     };
 
     // console.log(presenting);
-    const cards = Object.entries(presenting).sort(asc).map(([pid, p]) => {
+    const cards = Object.entries(presenting).map(assignPriority).sort(priorityOrder).map(([pid, p]) => {
       if (pid !== editId) {
         return <Card key={pid} className={classes.card}>
           <div style={{display: 'flex', direction: 'row'}}>

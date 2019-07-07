@@ -43,7 +43,7 @@ function Bottom({history, location, classes, isArranger}) {
         >
         <BottomNavigationAction label="Home" icon={<HomeIcon />} />
         <BottomNavigationAction label="Live Stream" icon={<LiveStreamIcon />} />
-        <BottomNavigationAction label="Present" icon={<RegisterIcon />} />
+        <BottomNavigationAction label="Presentation" icon={<RegisterIcon />} />
       { isArranger && <BottomNavigationAction label="Arrange" icon={<ArrangeIcon />} /> }
       </BottomNavigation>);
 }
