@@ -3,16 +3,18 @@ import React from 'react';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardActions from '@material-ui/core/CardActions';
+import CardContent from '@material-ui/core/CardContent';
 import { withStyles } from '@material-ui/core/styles';
 // import EmptyState from '../../layout/EmptyState/EmptyState';
 
 import {getRosterIndex} from '../RosterContent/RosterContent';
-import {assignPriority, priorityOrder} from '../RegisterContent/RegisterContent';
+import {assignPriority, getPreference, priorityOrder} from '../RegisterContent/RegisterContent';
 
 import firebase from 'firebase/app';
 import 'firebase/firestore';
 import IconButton from '@material-ui/core/IconButton';
 import PostponeIcon from '@material-ui/icons/Redo';
+import SoonerIcon from '@material-ui/icons/Undo';
 
 import SkipPreviousIcon from '@material-ui/icons/SkipPrevious';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
@@ -75,7 +77,6 @@ class ArrangerContent extends React.Component {
     super(props);
     this.state = {
       replenish: true,
-      poolOrder: [],
       roster: [],
       rosterIndex: 0,
       all: {},
@@ -145,7 +146,7 @@ class ArrangerContent extends React.Component {
             id: doc.id,
             index: roster.length,
           };
-          roster.push(item);
+          roster.push({...item, isPool: false});
         });
 
         const rosterIndex = getRosterIndex(roster);
@@ -178,42 +179,67 @@ class ArrangerContent extends React.Component {
     }, {merge: true});
   };
 
-  goto = async (to) => {
+  reschedule = async (item, postpone) => {
+    if (this.state.roster.includes(item)) {
+      if (postpone) {
+        firebase.firestore().collection('roster').doc(item.id).delete();
+      }
+    } else {
+      const priority = Math.max(-1000, item.priority + (postpone ? 1000 : -1000));
+      const preference = getPreference(priority);
+      if (preference === 'now') {
+        this.goto(false, item);
+      }
+      firebase.firestore().collection('participants').doc(item.participant)
+        .collection('presenting').doc(item.id).set({
+        preference,
+      }, {merge: true});
+    }
+  };
+
+  goto = async (to, toPool) => {
     const { roster, rosterIndex } = this.state;
     const from = roster[rosterIndex];
     const db = firebase.firestore();
     try {
+      if (to === undefined && toPool) {
+        to = toPool;
+      }
+
       if (to && from && to.id === from.id) {
         return;
       }
 
-      let pss;
-      if (to) {
-        const presentRef = db.collection('participants').doc(to.participant).collection('presenting').doc(to.id);
+      let pss, ss;
+      const target = to || toPool || {};
+      if (target.participant) {
+        ss = await db.collection('participants').doc(target.participant).get();
+      }
+      if (toPool) {
+        const presentRef = db.collection('participants').doc(toPool.participant).collection('presenting').doc(toPool.id);
         pss = await presentRef.get();
       }
-      await db.runTransaction(tx => {
+      await db.runTransaction(async tx => {
+        const rosterRef = db.collection('roster');
+        const stamps = {
+          startStamp: firebase.firestore.FieldValue.serverTimestamp(),
+          finishStamp: null,
+        };
+        if (pss) {
+          // Take something from the pool.
+          const lastSnap = await rosterRef.orderBy('order', 'desc').limit(1).get();
+          const lastData = (lastSnap.size > 0 && lastSnap.docs[0].data()) || {};
+          const order = (lastData.order || 0) + 1;
+          const data = ss && ss.exists ? ss.data() : {};
+          const pdata = pss.exists ? pss.data() : {};
+          tx.set(rosterRef.doc(toPool.id), {
+            ...data,
+            ...pdata,
+            order,
+          }, {merge: true});
+        }
         if (to) {
-          const rosterRef = db.collection('roster').doc(to.id);
-          const stamps = {
-            startStamp: firebase.firestore.FieldValue.serverTimestamp(),
-            finishStamp: null,
-          };
-          if (to.addToRoster) {
-            const docInfo = db.collection('roster').doc('info');
-            const ss = tx.get(docInfo);
-            const data = ss.exists ? ss.data() : {};
-            const order = (data.lastOrder || 0) + 1;
-            const pdata = pss.exists ? pss.data() : {};
-            tx.set(rosterRef, {
-              ...pdata,
-              order,
-              ...stamps,
-            }, {merge: true});
-            tx.set(docInfo, {...data, lastOrder: order});
-          } else {
-            tx.set(rosterRef, stamps, {merge: true});
-          }
+          tx.set(rosterRef.doc(to.id), stamps, {merge: true});
         }
         if (from) {
           tx.set(db.collection('roster').doc(from.id), {
@@ -240,7 +266,7 @@ class ArrangerContent extends React.Component {
 
     Object.entries(inPool).map(assignPriority).sort(priorityOrder).forEach(([id, item]) => {
       const participant = (item && participants[item.participant]) || {};
-      pool.push({...participant, ...item, id});
+      pool.push({...participant, ...item, id, isPool: true});
       delete(inPool[id]);
     });
 
@@ -258,8 +284,12 @@ class ArrangerContent extends React.Component {
         <div style={{display: 'flex', direction: 'row'}}>
         <CardHeader title={Title} subheader={SubH} classes={{title: color, subheader: color}} 
           className={classes.header} />
+        <CardContent>{item.isPool && item.preference}</CardContent>
         <CardActions className={classes.actions}>
-          <IconButton title="Postpone"><PostponeIcon /></IconButton>
+          <IconButton disabled={!item.isPool} title="Sooner"
+            onClick={() => this.reschedule(item, false)}><SoonerIcon /></IconButton>
+          <IconButton title="Postpone"
+            onClick={() => this.reschedule(item, true)}><PostponeIcon /></IconButton>
           <IconButton aria-label="Play"
             onClick={() => this.goto(pool ? item : roster[item.index])}
           ><PlayArrowIcon />
@@ -283,13 +313,8 @@ class ArrangerContent extends React.Component {
         <IconButton aria-label="Next"
           disabled={!roster[rosterIndex]}
           onClick={() => {
-            let next = roster[rosterIndex + 1];
-            if (!next) {
-              if (replenish && pool[0]) {
-                next = {...pool[0], addToRoster: true};
-              }
-            }
-            this.goto(next);
+            const next = roster[rosterIndex + 1];
+            this.goto(next, replenish && pool[0]);
           }}
         >
           <SkipNextIcon />

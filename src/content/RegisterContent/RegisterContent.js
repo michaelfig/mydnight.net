@@ -35,26 +35,54 @@ import DeleteIcon from '@material-ui/icons/Delete';
 export const assignPriority = ([id, item]) => {
   let priority;
   switch (item.preference) {
+    case 'now':
+      priority = -1000;
+      break;
     case 'immediate':
-      priority = 500;
+      priority = 0;
       break;
     case 'beginning':
       priority = 1000;
       break;
+    case 'any':
+      priority = 2000;
+      break;
     case 'end':
       priority = 3000;
       break;
-    case 'veryEnd':
-      priority = 3500;
+    case 'closing':
+      priority = 4000;
       break;
     case 'after':
-      priority = 4000;
+      priority = 5000;
+      break;
+    case 'nogo':
+      priority = 6000;
       break;
     default:
       priority = 2000;
   }
   const order = item.stamp ? item.stamp.seconds + item.stamp.nanoseconds / 10 ** 9: +Infinity;
   return [id, {...item, priority, order}];
+};
+
+export const getPreference = priority => {
+  if (priority < 0) {
+    return 'now';
+  } else if (priority < 1000) {
+    return 'immediate';
+  } else if (priority < 2000) {
+    return 'beginning';
+  } else if (priority < 3000) {
+    return 'any';
+  } else if (priority < 4000) {
+    return 'end';
+  } else if (priority < 5000) {
+    return 'closing';
+  } else if (priority < 6000) {
+    return 'after';
+  }
+  return 'nogo';
 };
 
 // Priority is low to high, order is low to high.
