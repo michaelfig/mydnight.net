@@ -52,9 +52,9 @@ class LiveStreamContent extends React.Component {
     batch.set(db.collection('participants').doc(user.uid), {
       attending: attending || null,
     }, {merge: true});
-    batch.update(db.collection('livestream').doc('publicInfo'), {
+    batch.set(db.collection('livestream').doc('publicInfo'), {
       sofar: firebase.firestore.FieldValue.increment(attending ? +1 : -1),
-    });
+    }, {merge: true});
     batch.commit().catch(e => console.log(`Cannot update attendance`, e));
   };
 

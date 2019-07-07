@@ -131,7 +131,7 @@ class App extends React.Component {
                   .forEach(f => data[f] && (toUpdate[f] = data[f]));
                 Object.entries(data.messageTokens || {})
                   .forEach(([key, val]) => toUpdate[`messageTokens.${key}`] = val);
-                return participants.doc(user.uid).update(toUpdate);
+                return participants.doc(user.uid).set(toUpdate, {merge: true});
               })
               .then(() => this._anonymousUser.delete())
               .then(() => {
@@ -225,7 +225,7 @@ class App extends React.Component {
 
   saveSettings = (settings, callback) => {
     const user = this.state.user;
-    firebase.firestore().collection('participants').doc(user.uid).update(settings).then(callback);
+    firebase.firestore().collection('participants').doc(user.uid).set(settings, {merge: true}).then(callback);
   };
 
   closeSettingsDialog = (callback) => {
@@ -401,7 +401,7 @@ class App extends React.Component {
                   toUpdate[d] = user[u];
                 }
               }
-              return p.update(toUpdate);
+              return p.set(toUpdate, {merge: true});
             });
 
             db.collection('arrangers').doc(user.uid).get().then(
@@ -420,8 +420,7 @@ class App extends React.Component {
                 const doc = db.collection('participants')
                   .doc(user.uid);
                 doc
-                  .update({[`messageTokens.${token}`]: token})
-                  .catch(() => doc.set({messageTokens: {[token]: token}}));
+                  .set({[`messageTokens.${token}`]: token}, {merge: true});
                 navigator.serviceWorker.getRegistration()
                   .then(registration =>
                     navigator.serviceWorker.addEventListener('message', 

@@ -172,10 +172,10 @@ class ArrangerContent extends React.Component {
   };
 
   reset = item => {
-    firebase.firestore().collection('roster').doc(item.id).update({
+    firebase.firestore().collection('roster').doc(item.id).set({
       startStamp: null,
       finishStamp: null,
-    });
+    }, {merge: true});
   };
 
   goto = async (to) => {
@@ -205,20 +205,20 @@ class ArrangerContent extends React.Component {
             const data = ss.exists ? ss.data() : {};
             const order = (data.lastOrder || 0) + 1;
             const pdata = pss.exists ? pss.data() : {};
-            tx.update(rosterRef, {
+            tx.set(rosterRef, {
               ...pdata,
               order,
               ...stamps,
-            });
+            }, {merge: true});
             tx.set(docInfo, {...data, lastOrder: order});
           } else {
-            tx.update(rosterRef, stamps);
+            tx.set(rosterRef, stamps, {merge: true});
           }
         }
         if (from) {
-          tx.update(db.collection('roster').doc(from.id), {
+          tx.set(db.collection('roster').doc(from.id), {
             finishStamp: firebase.firestore.FieldValue.serverTimestamp(),
-          });
+          }, {merge: true});
         }
       });
     } catch (e) {
