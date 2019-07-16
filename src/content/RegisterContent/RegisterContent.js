@@ -174,6 +174,7 @@ class RegisterContent extends React.Component {
     return {editId: undefined, editing: {
       title: 'Reflections',
       name: user.displayName || 'Anonymous',
+      relationship: 'Friend',
       preference: 'any',
       recorded: 'video',
       home: this.state.home || '',
@@ -227,7 +228,7 @@ class RegisterContent extends React.Component {
 
     const { profileRatio, presenting, editing, editId, dismissed } = this.state;
 
-    const { name, title, text, venue, home, recorded, preference, user } = editing || {};
+    const { name, title, text, venue, home, recorded, relationship, preference, user } = editing || {};
 
     const disableOkButton = false;
     const highlightOkButton = true;
@@ -296,6 +297,18 @@ class RegisterContent extends React.Component {
             <Input id="present-id-user"
               onChange={e => this.setState({editing: {...this.state.editing, user: e.target.value}})}
               value={user}/>
+
+          </FormControl>
+          </Grid>
+
+
+          <Grid item xs={12}>
+          <FormControl margin='normal' style={{width: '100%'}}>
+            <InputLabel htmlFor="present-id-relationship">Relationship to Stewart</InputLabel>
+            <Input id="present-id-relationship"
+              onChange={e => this.setState({editing: {...this.state.editing, relationship: e.target.value}})}
+              value={relationship}/>
+
           </FormControl>
           </Grid>
 
@@ -370,8 +383,12 @@ class RegisterContent extends React.Component {
     };
 
     // console.log(presenting);
+    let nowEditing;
     const cards = Object.entries(presenting).map(assignPriority).sort(priorityOrder).map(([pid, p]) => {
-      if (pid !== editId) {
+      if (pid === editId) {
+        nowEditing = [pid, editing];
+        return;
+      }
         return <Card key={pid} className={classes.card}>
           <div style={{display: 'flex', direction: 'row'}}>
           <CardHeader className={classes.header} title={p.title} subheader={p.name} />
@@ -381,12 +398,13 @@ class RegisterContent extends React.Component {
           </CardActions>
           </div>
         </Card>;
-      }
-      return buildEditor(pid, editing);
     });
 
     if (editing && !editId) {
-      cards.push(buildEditor(undefined, editing));
+      nowEditing = [undefined, editing];
+    }
+    if (nowEditing) {
+      cards.unshift(buildEditor(...nowEditing));
     }
 
     return (
